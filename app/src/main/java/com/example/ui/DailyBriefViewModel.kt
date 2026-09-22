@@ -40,10 +40,17 @@ data class DailyBriefUiState(
 
 class DailyBriefViewModel(application: Application) : AndroidViewModel(application) {
 
+    private val prefs = application.getSharedPreferences("daily_brief_prefs", Context.MODE_PRIVATE)
     private val database = AppDatabase.getInstance(application)
     private val repository = ArticleRepository(database.articleDao())
 
-    private val _uiState = MutableStateFlow(DailyBriefUiState())
+    private val _uiState = MutableStateFlow(
+        DailyBriefUiState(
+            serverUrl = prefs.getString("server_url", NetworkClient.DEFAULT_EMULATOR_BASE_URL) ?: NetworkClient.DEFAULT_EMULATOR_BASE_URL,
+            githubOwner = prefs.getString("github_owner", "kamalbaitha-hub") ?: "kamalbaitha-hub",
+            githubRepo = prefs.getString("github_repo", "Daily_Brief") ?: "Daily_Brief"
+        )
+    )
     val uiState: StateFlow<DailyBriefUiState> = _uiState.asStateFlow()
 
     init {
@@ -149,8 +156,10 @@ class DailyBriefViewModel(application: Application) : AndroidViewModel(applicati
     }
 
     fun updateServerUrl(newUrl: String) {
-        repository.updateBaseUrl(newUrl)
-        _uiState.update { it.copy(serverUrl = newUrl, statusMessage = "Server URL updated to $newUrl") }
+        val trimmed = newUrl.trim()
+        prefs.edit().putString("server_url", trimmed).apply()
+        repository.updateBaseUrl(trimmed)
+        _uiState.update { it.copy(serverUrl = trimmed, statusMessage = "Server URL updated to $trimmed") }
         refreshData()
     }
 
@@ -164,11 +173,17 @@ class DailyBriefViewModel(application: Application) : AndroidViewModel(applicati
     }
 
     fun setGitHubRepoConfig(owner: String, repo: String) {
+        val cleanOwner = owner.trim()
+        val cleanRepo = repo.trim()
+        prefs.edit()
+            .putString("github_owner", cleanOwner)
+            .putString("github_repo", cleanRepo)
+            .apply()
         _uiState.update {
             it.copy(
-                githubOwner = owner.trim(),
-                githubRepo = repo.trim(),
-                statusMessage = "GitHub repo set to $owner/$repo"
+                githubOwner = cleanOwner,
+                githubRepo = cleanRepo,
+                statusMessage = "GitHub repo set to $cleanOwner/$cleanRepo"
             )
         }
     }
