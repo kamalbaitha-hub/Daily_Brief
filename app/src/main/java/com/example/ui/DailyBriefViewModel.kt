@@ -29,8 +29,8 @@ data class DailyBriefUiState(
     val statusMessage: String? = null,
     val lastSyncTime: Long? = null,
     // GitHub update state
-    val githubOwner: String = "kamalbaitha",
-    val githubRepo: String = "daily-brief",
+    val githubOwner: String = "kamalbaitha-hub",
+    val githubRepo: String = "Daily_Brief",
     val isCheckingUpdate: Boolean = false,
     val isDownloadingUpdate: Boolean = false,
     val downloadProgress: Int = 0,
