@@ -53,6 +53,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.data.local.ArticleEntity
+import com.example.ui.util.NewsPointCleaner
 import com.example.ui.theme.CatGeneral
 import com.example.ui.util.getFormattedDateTime
 import com.example.ui.util.getReadingTimeLabel
@@ -308,22 +309,14 @@ fun CategoryCard(
 
                 Spacer(modifier = Modifier.height(10.dp))
 
-                // Below heading, few new points from contents (strictly distinct from headline)
-                val keyPoints = remember(article.summary, article.headline) {
-                    val normHeadline = article.headline.lowercase().replace(Regex("[^a-z0-9]"), " ").trim()
-                    article.summary
-                        .split("\n")
-                        .map { it.trim() }
-                        .filter { it.isNotBlank() }
-                        .map { it.replace(Regex("^[•\\-*\\d.]+\\s*"), "").trim() }
-                        .filter { clean ->
-                            val normClean = clean.lowercase().replace(Regex("[^a-z0-9]"), " ").trim()
-                            if (normHeadline.length > 15 && (normClean.contains(normHeadline) || normHeadline.contains(normClean))) {
-                                false
-                            } else {
-                                clean.length > 8
-                            }
-                        }
+                // Below heading: Pure summary main points (strictly removing point titles like "Key context:", "Details:", etc.)
+                val keyPoints = remember(article.summary, article.headline, article.originalContent) {
+                    NewsPointCleaner.extractCleanPoints(
+                        summary = article.summary,
+                        headline = article.headline,
+                        originalContent = article.originalContent,
+                        maxPoints = 4
+                    )
                 }
 
                 Surface(
@@ -341,7 +334,7 @@ fun CategoryCard(
                             color = MaterialTheme.colorScheme.primary
                         )
                         Spacer(modifier = Modifier.height(6.dp))
-                        val displayPoints = if (keyPoints.isNotEmpty()) keyPoints.take(4) else listOf("Key developments and sector implications tracked by Daily Brief newsroom.")
+                        val displayPoints = if (keyPoints.isNotEmpty()) keyPoints else listOf("Key developments and sector implications tracked by Daily Brief newsroom.")
                         displayPoints.forEach { point ->
                             Row(
                                 modifier = Modifier.padding(vertical = 2.dp),

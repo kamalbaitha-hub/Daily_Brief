@@ -470,18 +470,38 @@ function renderNewsFeed(container) {
 function formatBullets(summary, headline = '') {
   if (!summary) return '<li>Latest industry and market updates curated by Daily Brief.</li>';
   const normHeadline = headline.toLowerCase().replace(/[^a-z0-9]/g, ' ').trim();
+  const boilerplatePatterns = [
+    'verified real-time reporting',
+    'verified real time reporting',
+    'fast executive summary',
+    'compiled directly from live news feeds',
+    'real-time news wire',
+    'live coverage:'
+  ];
+  const prefixRegex = /^(Key\s*context|Details?|Context|Live\s*coverage|Executive\s*summary|Summary|Update|Analysis|Overview|Background|Highlights?)\s*[:\-]\s*/i;
+
   const lines = summary.split('\n')
     .map(l => l.trim())
     .filter(l => l.length > 0)
     .map(line => line.replace(/^[•\-\*\d\.]+\s*/, '').trim())
+    .map(line => line.replace(/<[^>]*>/g, ' ').trim())
+    .filter(clean => {
+      const lower = clean.toLowerCase();
+      for (const bp of boilerplatePatterns) {
+        if (lower.includes(bp)) return false;
+      }
+      return true;
+    })
+    .map(line => line.replace(prefixRegex, '').trim())
     .filter(clean => {
       // Filter out any bullet that just repeats the headline
       const normClean = clean.toLowerCase().replace(/[^a-z0-9]/g, ' ').trim();
       if (normHeadline.length > 15 && (normClean.includes(normHeadline) || normHeadline.includes(normClean))) {
         return false;
       }
-      return clean.length > 10;
-    });
+      return clean.length > 12;
+    })
+    .map(line => line.charAt(0).toUpperCase() + line.slice(1));
 
   if (lines.length === 0) {
     return '<li>Comprehensive developments and market analysis from the Daily Brief wire.</li>';
