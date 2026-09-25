@@ -115,7 +115,9 @@ object GitHubUpdateManager {
         } catch (e: Exception) {
             null
         }
-        val currentVersion = packageInfo?.versionName ?: "1.0"
+        val currentVersion = com.example.BuildConfig.VERSION_NAME.ifBlank {
+            packageInfo?.versionName ?: "1.4.0"
+        }
 
         if (cleanOwner.isBlank() || cleanRepo.isBlank()) {
             return@withContext Result.success(
@@ -151,8 +153,20 @@ object GitHubUpdateManager {
                 releasePageUrl = release.htmlUrl ?: ""
             )
 
+            val prefs = context.getSharedPreferences("daily_brief_prefs", Context.MODE_PRIVATE)
+            val lastNotifiedVersion = prefs.getString("last_notified_update_version", null)
+
             if (isNewer) {
-                notifyUpdateAvailable(context, info)
+                // Only post notification once per new version to avoid annoying notification loops
+                if (lastNotifiedVersion != latestTag) {
+                    prefs.edit().putString("last_notified_update_version", latestTag).apply()
+                    notifyUpdateAvailable(context, info)
+                }
+            } else {
+                // If app is already on latest version, dismiss any stale update notification
+                try {
+                    NotificationManagerCompat.from(context).cancel(UPDATE_NOTIFICATION_ID)
+                } catch (e: Exception) {}
             }
 
             Result.success(info)

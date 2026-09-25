@@ -204,7 +204,7 @@ class DailyBriefViewModel(application: Application) : AndroidViewModel(applicati
                         it.copy(
                             isCheckingUpdate = false,
                             updateInfo = info,
-                            showUpdateDialog = if (userInitiated) true else info.hasUpdate,
+                            showUpdateDialog = userInitiated,
                             statusMessage = if (info.hasUpdate) {
                                 "New version ${info.latestVersion} available!"
                             } else if (userInitiated) {
@@ -217,19 +217,19 @@ class DailyBriefViewModel(application: Application) : AndroidViewModel(applicati
                     _uiState.update {
                         it.copy(
                             isCheckingUpdate = false,
-                            showUpdateDialog = if (userInitiated) true else false,
+                            showUpdateDialog = userInitiated,
                             updateInfo = if (userInitiated) {
                                 com.example.update.UpdateInfo(
-                                    hasUpdate = true,
-                                    latestVersion = "v1.4.0",
-                                    currentVersion = it.updateInfo?.currentVersion ?: "1.3",
-                                    releaseNotes = "Daily Brief v1.4.0 with restructured Real-Time Briefs, non-repetitive summaries, and background context.",
-                                    downloadUrl = "https://github.com/${state.githubOwner}/${state.githubRepo}/releases/download/v1.4.0/DailyBrief-v1.4.0.apk",
-                                    releasePageUrl = "https://github.com/${state.githubOwner}/${state.githubRepo}/releases/tag/v1.4.0"
+                                    hasUpdate = false,
+                                    latestVersion = it.updateInfo?.latestVersion ?: "v1.4.0",
+                                    currentVersion = com.example.BuildConfig.VERSION_NAME,
+                                    releaseNotes = error.message ?: "You are on the latest build.",
+                                    downloadUrl = "",
+                                    releasePageUrl = "https://github.com/${state.githubOwner}/${state.githubRepo}"
                                 )
                             } else it.updateInfo,
                             statusMessage = if (userInitiated) {
-                                "Update available on GitHub (v1.4.0)"
+                                "Update check: ${error.message ?: "App is up to date"}"
                             } else null
                         )
                     }
