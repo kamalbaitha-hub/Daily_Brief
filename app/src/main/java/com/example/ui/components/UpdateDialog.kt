@@ -1,5 +1,7 @@
 package com.example.ui.components
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -12,6 +14,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.OpenInBrowser
 import androidx.compose.material.icons.filled.SystemUpdate
@@ -28,6 +31,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
@@ -55,14 +59,14 @@ fun UpdateDialog(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Surface(
                     shape = RoundedCornerShape(8.dp),
-                    color = MaterialTheme.colorScheme.primaryContainer,
+                    color = if (updateInfo.hasUpdate) MaterialTheme.colorScheme.primaryContainer else Color(0xFF10B981).copy(alpha = 0.2f),
                     modifier = Modifier.size(36.dp)
                 ) {
                     BoxCenter {
                         Icon(
-                            imageVector = Icons.Default.SystemUpdate,
+                            imageVector = if (updateInfo.hasUpdate) Icons.Default.SystemUpdate else Icons.Default.CheckCircle,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
+                            tint = if (updateInfo.hasUpdate) MaterialTheme.colorScheme.primary else Color(0xFF10B981),
                             modifier = Modifier.size(20.dp)
                         )
                     }
@@ -70,13 +74,13 @@ fun UpdateDialog(
                 Spacer(modifier = Modifier.width(12.dp))
                 Column {
                     Text(
-                        text = "Update Available",
+                        text = if (updateInfo.hasUpdate) "Update Available" else "App is Up to Date",
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                     )
                     Text(
-                        text = "v${updateInfo.currentVersion} ➔ ${updateInfo.latestVersion}",
+                        text = if (updateInfo.hasUpdate) "v${updateInfo.currentVersion} ➔ ${updateInfo.latestVersion}" else "Version v${updateInfo.currentVersion} (Latest: ${updateInfo.latestVersion})",
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.primary
+                        color = if (updateInfo.hasUpdate) MaterialTheme.colorScheme.primary else Color(0xFF10B981)
                     )
                 }
             }
@@ -114,7 +118,7 @@ fun UpdateDialog(
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                } else {
+                } else if (updateInfo.hasUpdate) {
                     Text(
                         text = "A new release has been published on GitHub with the latest updates.",
                         style = MaterialTheme.typography.bodyMedium,
@@ -130,7 +134,7 @@ fun UpdateDialog(
                     ) {
                         Column(modifier = Modifier.padding(12.dp)) {
                             Text(
-                                text = "RELEASE NOTES",
+                                text = "RELEASE NOTES (${updateInfo.latestVersion})",
                                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                                 color = MaterialTheme.colorScheme.primary
                             )
@@ -150,22 +154,59 @@ fun UpdateDialog(
                         style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
                         color = MaterialTheme.colorScheme.onSurface
                     )
+                } else {
+                    Text(
+                        text = "You are running the latest version of Daily Brief with all recent updates and features applied.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Surface(
+                        shape = RoundedCornerShape(10.dp),
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Text(
+                                text = "ACTIVE FEATURES",
+                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                color = Color(0xFF10B981)
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(
+                                text = "• Restructured News Briefs: Heading -> Key Points -> Background -> Read original publication\n• Non-repetitive AI summary extraction\n• Offline Room persistence & daily 8 AM alerts\n• Newspaper & Magazine digital kiosks",
+                                style = MaterialTheme.typography.bodySmall.copy(lineHeight = 18.sp),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
                 }
             }
         },
         confirmButton = {
             if (!isDownloading) {
-                Button(
-                    onClick = onConfirmUpdate,
-                    modifier = Modifier.testTag("btn_confirm_update")
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Download,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text("Download & Install")
+                if (updateInfo.hasUpdate) {
+                    Button(
+                        onClick = onConfirmUpdate,
+                        modifier = Modifier.testTag("btn_confirm_update")
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Download,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Download & Install")
+                    }
+                } else {
+                    Button(
+                        onClick = onDismiss,
+                        modifier = Modifier.testTag("btn_confirm_update")
+                    ) {
+                        Text("Great!")
+                    }
                 }
             } else {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -177,11 +218,31 @@ fun UpdateDialog(
         },
         dismissButton = {
             if (!isDownloading) {
-                TextButton(
-                    onClick = onDismiss,
-                    modifier = Modifier.testTag("btn_dismiss_update")
-                ) {
-                    Text("Later")
+                if (updateInfo.hasUpdate) {
+                    TextButton(
+                        onClick = onDismiss,
+                        modifier = Modifier.testTag("btn_dismiss_update")
+                    ) {
+                        Text("Later")
+                    }
+                } else if (updateInfo.releasePageUrl.isNotBlank()) {
+                    OutlinedButton(
+                        onClick = {
+                            try {
+                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(updateInfo.releasePageUrl))
+                                context.startActivity(intent)
+                            } catch (e: Exception) {}
+                        },
+                        modifier = Modifier.testTag("btn_view_release_page")
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.OpenInBrowser,
+                            contentDescription = null,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("GitHub Release")
+                    }
                 }
             }
         },

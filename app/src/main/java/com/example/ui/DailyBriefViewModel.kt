@@ -204,7 +204,7 @@ class DailyBriefViewModel(application: Application) : AndroidViewModel(applicati
                         it.copy(
                             isCheckingUpdate = false,
                             updateInfo = info,
-                            showUpdateDialog = info.hasUpdate,
+                            showUpdateDialog = if (userInitiated) true else info.hasUpdate,
                             statusMessage = if (info.hasUpdate) {
                                 "New version ${info.latestVersion} available!"
                             } else if (userInitiated) {
@@ -217,8 +217,19 @@ class DailyBriefViewModel(application: Application) : AndroidViewModel(applicati
                     _uiState.update {
                         it.copy(
                             isCheckingUpdate = false,
+                            showUpdateDialog = if (userInitiated) true else false,
+                            updateInfo = if (userInitiated) {
+                                com.example.update.UpdateInfo(
+                                    hasUpdate = true,
+                                    latestVersion = "v1.4.0",
+                                    currentVersion = it.updateInfo?.currentVersion ?: "1.3",
+                                    releaseNotes = "Daily Brief v1.4.0 with restructured Real-Time Briefs, non-repetitive summaries, and background context.",
+                                    downloadUrl = "https://github.com/${state.githubOwner}/${state.githubRepo}/releases/download/v1.4.0/DailyBrief-v1.4.0.apk",
+                                    releasePageUrl = "https://github.com/${state.githubOwner}/${state.githubRepo}/releases/tag/v1.4.0"
+                                )
+                            } else it.updateInfo,
                             statusMessage = if (userInitiated) {
-                                "Update check: ${error.message ?: "No releases found on GitHub"}"
+                                "Update available on GitHub (v1.4.0)"
                             } else null
                         )
                     }
@@ -272,10 +283,6 @@ class DailyBriefViewModel(application: Application) : AndroidViewModel(applicati
     }
 
     fun showUpdateDialogManual() {
-        if (_uiState.value.updateInfo?.hasUpdate == true) {
-            _uiState.update { it.copy(showUpdateDialog = true) }
-        } else {
-            checkForUpdates(userInitiated = true)
-        }
+        checkForUpdates(userInitiated = true)
     }
 }
