@@ -61,16 +61,23 @@ fun DailyBriefApp(
         contract = ActivityResultContracts.RequestPermission()
     ) { _ -> }
 
+    val context = androidx.compose.ui.platform.LocalContext.current
+
     LaunchedEffect(Unit) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
-        // Check for updates silently on startup
-        viewModel.checkForUpdates(userInitiated = false)
+        val activity = context as? android.app.Activity
+        val shouldOpenUpdate = activity?.intent?.getBooleanExtra("OPEN_UPDATE_PROMPT", false) == true
+        if (shouldOpenUpdate) {
+            viewModel.showUpdateDialogManual()
+        } else {
+            // Check for updates silently on startup
+            viewModel.checkForUpdates(userInitiated = false)
+        }
     }
 
     val isDark = uiState.isDarkTheme ?: isSystemInDarkTheme()
-    val context = androidx.compose.ui.platform.LocalContext.current
 
     MyApplicationTheme(darkTheme = isDark) {
         Surface(modifier = Modifier.fillMaxSize()) {

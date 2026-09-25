@@ -201,11 +201,28 @@ fun UpdateDialog(
                         Text("Download & Install")
                     }
                 } else {
-                    Button(
-                        onClick = onDismiss,
-                        modifier = Modifier.testTag("btn_confirm_update")
-                    ) {
-                        Text("Great!")
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        if (updateInfo.downloadUrl.isNotBlank()) {
+                            TextButton(
+                                onClick = onConfirmUpdate,
+                                modifier = Modifier.testTag("btn_redownload_update")
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Download,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("Download APK")
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
+                        }
+                        Button(
+                            onClick = onDismiss,
+                            modifier = Modifier.testTag("btn_confirm_update")
+                        ) {
+                            Text("OK")
+                        }
                     }
                 }
             } else {
