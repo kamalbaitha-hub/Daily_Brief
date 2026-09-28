@@ -275,12 +275,12 @@ const NEWSPAPERS = [
     icon: "business"
   },
   {
-    id: "economic_times",
-    title: "The Economic Times",
-    publisher: "Bennett, Coleman & Co. Ltd.",
+    id: "financial_express",
+    title: "The Financial Express",
+    publisher: "The Indian Express Group",
     category: "Finance & Conglomerates",
-    description: "The largest business daily covering Indian and global stock markets, IPO trackings, private equity deals, and tech leadership.",
-    eEditionUrl: "https://epaper.indiatimes.com/the-economic-times",
+    description: "Premier financial and market daily covering Indian equities, corporate balance sheets, sectoral trends, and global macroeconomic policy.",
+    eEditionUrl: "https://epaper.financialexpress.com",
     badgeLabel: "MARKETS E-PAPER",
     accentColor: "#15803d",
     icon: "business"
@@ -300,6 +300,28 @@ const NEWSPAPERS = [
 
 const MAGAZINES = [
   {
+    id: "business_today",
+    title: "Business Today",
+    publisher: "Living Media India Limited",
+    category: "Business & Markets",
+    description: "India's highest-circulating business magazine delivering frontline reporting on corporate strategy, stock markets, startups, and leadership.",
+    eEditionUrl: "https://www.businesstoday.in/magazine",
+    badgeLabel: "BUSINESS FORTNIGHTLY",
+    accentColor: "#b91c1c",
+    icon: "business"
+  },
+  {
+    id: "forbes_india",
+    title: "Forbes India",
+    publisher: "Network18 Media",
+    category: "Wealth & Enterprise",
+    description: "India's premier business and leadership authority featuring billionaire lists, venture capital deals, high-growth startups, and corporate game-changers.",
+    eEditionUrl: "https://www.forbesindia.com/magazine/",
+    badgeLabel: "WEALTH & STRATEGY",
+    accentColor: "#0f766e",
+    icon: "business"
+  },
+  {
     id: "india_today",
     title: "India Today",
     publisher: "Living Media India Limited",
@@ -316,7 +338,7 @@ const MAGAZINES = [
     publisher: "Malayala Manorama Co. Ltd.",
     category: "General Interest & Society",
     description: "Comprehensive weekly newsmagazine highlighting geopolitical analysis, human interest stories, literary profiles, and scientific developments.",
-    eEditionUrl: "https://www.theweek.in/theweek.html",
+    eEditionUrl: "https://www.theweek.in",
     badgeLabel: "WEEKLY MAGAZINE",
     accentColor: "#ea580c",
     icon: "magazine"
@@ -331,17 +353,6 @@ const MAGAZINES = [
     badgeLabel: "FORTNIGHTLY",
     accentColor: "#7c2d12",
     icon: "magazine"
-  },
-  {
-    id: "science_reporter",
-    title: "Science Reporter (CSIR)",
-    publisher: "Council of Scientific & Industrial Research",
-    category: "Science & Discovery",
-    description: "India's premier popular science monthly covering space missions (ISRO), quantum technologies, biotech breakthroughs, and environmental science.",
-    eEditionUrl: "https://niscpr.res.in/periodicals/popular-science-magazines/science-reporter",
-    badgeLabel: "SCIENCE & TECH",
-    accentColor: "#7c3aed",
-    icon: "science"
   },
   {
     id: "down_to_earth",
@@ -366,15 +377,15 @@ const MAGAZINES = [
     icon: "business"
   },
   {
-    id: "health_and_nutrition",
-    title: "Health & Nutrition",
-    publisher: "Magna Publishing",
-    category: "Health & Wellness",
-    description: "India's pioneering wellness monthly featuring evidence-based clinical nutrition, preventative cardiology, fitness regimes, and mental well-being.",
-    eEditionUrl: "https://healthandnutrition.in",
-    badgeLabel: "HEALTH & FITNESS",
-    accentColor: "#e11d48",
-    icon: "health"
+    id: "open_magazine",
+    title: "Open Magazine",
+    publisher: "Open Media Network",
+    category: "Current Affairs & Culture",
+    description: "Weekly current affairs and culture digest known for compelling long-form features, political commentary, and analytical reportage.",
+    eEditionUrl: "https://openthemagazine.com",
+    badgeLabel: "WEEKLY DIGEST",
+    accentColor: "#7c3aed",
+    icon: "magazine"
   },
   {
     id: "digit",
@@ -382,7 +393,7 @@ const MAGAZINES = [
     publisher: "9.9 Group",
     category: "Technology & Gadgets",
     description: "India's foremost personal technology authority covering hardware teardowns, AI benchmarks, consumer gadgets, and cybersecurity.",
-    eEditionUrl: "https://www.digit.in/magazine",
+    eEditionUrl: "https://www.digit.in",
     badgeLabel: "TECH & AI",
     accentColor: "#6d28d9",
     icon: "science"

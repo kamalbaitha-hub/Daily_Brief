@@ -82,12 +82,12 @@ object PublicationCornerData {
             iconType = "business"
         ),
         PublicationItem(
-            id = "economic_times",
-            title = "The Economic Times",
-            publisher = "Bennett, Coleman & Co. Ltd.",
+            id = "financial_express",
+            title = "The Financial Express",
+            publisher = "The Indian Express Group",
             category = "Finance & Conglomerates",
-            description = "The largest business daily covering Indian and global stock markets, IPO trackings, private equity deals, and tech leadership.",
-            eEditionUrl = "https://epaper.indiatimes.com/the-economic-times",
+            description = "Premier financial and market daily covering Indian equities, corporate balance sheets, sectoral trends, and global macroeconomic policy.",
+            eEditionUrl = "https://epaper.financialexpress.com",
             badgeLabel = "MARKETS E-PAPER",
             accentColorHex = 0xFF15803D, // Forest Green
             iconType = "business"
@@ -107,6 +107,28 @@ object PublicationCornerData {
 
     val MAGAZINES = listOf(
         PublicationItem(
+            id = "business_today",
+            title = "Business Today",
+            publisher = "Living Media India Limited",
+            category = "Business & Markets",
+            description = "India's highest-circulating business magazine delivering frontline reporting on corporate strategy, stock markets, startups, and leadership.",
+            eEditionUrl = "https://www.businesstoday.in/magazine",
+            badgeLabel = "BUSINESS FORTNIGHTLY",
+            accentColorHex = 0xFFB91C1C, // Crimson Red
+            iconType = "business"
+        ),
+        PublicationItem(
+            id = "forbes_india",
+            title = "Forbes India",
+            publisher = "Network18 Media",
+            category = "Wealth & Enterprise",
+            description = "India's premier business and leadership authority featuring billionaire lists, venture capital deals, high-growth startups, and corporate game-changers.",
+            eEditionUrl = "https://www.forbesindia.com/magazine/",
+            badgeLabel = "WEALTH & STRATEGY",
+            accentColorHex = 0xFF0F766E, // Teal
+            iconType = "business"
+        ),
+        PublicationItem(
             id = "india_today",
             title = "India Today",
             publisher = "Living Media India Limited",
@@ -123,7 +145,7 @@ object PublicationCornerData {
             publisher = "Malayala Manorama Co. Ltd.",
             category = "General Interest & Society",
             description = "Comprehensive weekly newsmagazine highlighting geopolitical analysis, human interest stories, literary profiles, and scientific developments.",
-            eEditionUrl = "https://www.theweek.in/theweek.html",
+            eEditionUrl = "https://www.theweek.in",
             badgeLabel = "WEEKLY MAGAZINE",
             accentColorHex = 0xFFEA580C, // Vibrant Orange
             iconType = "magazine"
@@ -138,17 +160,6 @@ object PublicationCornerData {
             badgeLabel = "FORTNIGHTLY",
             accentColorHex = 0xFF7C2D12, // Warm Brown/Maroon
             iconType = "magazine"
-        ),
-        PublicationItem(
-            id = "science_reporter",
-            title = "Science Reporter (CSIR-NIScPR)",
-            publisher = "Council of Scientific and Industrial Research",
-            category = "Science & Discovery",
-            description = "India's premier popular science monthly covering space missions (ISRO), quantum technologies, biotech breakthroughs, and environment science.",
-            eEditionUrl = "https://niscpr.res.in/periodicals/popular-science-magazines/science-reporter",
-            badgeLabel = "SCIENCE & TECH",
-            accentColorHex = 0xFF7C3AED, // Violet
-            iconType = "science"
         ),
         PublicationItem(
             id = "down_to_earth",
@@ -173,15 +184,15 @@ object PublicationCornerData {
             iconType = "business"
         ),
         PublicationItem(
-            id = "health_and_nutrition",
-            title = "Health & Nutrition",
-            publisher = "Magna Publishing",
-            category = "Health & Wellness",
-            description = "India's pioneering wellness monthly featuring evidence-based clinical nutrition, preventative cardiology, fitness regimes, and mental well-being.",
-            eEditionUrl = "https://healthandnutrition.in",
-            badgeLabel = "HEALTH & FITNESS",
-            accentColorHex = 0xFFE11D48, // Rose Red
-            iconType = "health"
+            id = "open_magazine",
+            title = "Open Magazine",
+            publisher = "Open Media Network",
+            category = "Current Affairs & Culture",
+            description = "Weekly current affairs and culture digest known for compelling long-form features, political commentary, and analytical reportage.",
+            eEditionUrl = "https://openthemagazine.com",
+            badgeLabel = "WEEKLY DIGEST",
+            accentColorHex = 0xFF7C3AED, // Violet
+            iconType = "magazine"
         ),
         PublicationItem(
             id = "digit",
@@ -189,7 +200,7 @@ object PublicationCornerData {
             publisher = "9.9 Group",
             category = "Technology & Gadgets",
             description = "India's foremost personal technology authority covering hardware teardowns, AI benchmarks, consumer gadgets, and cyber security.",
-            eEditionUrl = "https://www.digit.in/magazine",
+            eEditionUrl = "https://www.digit.in",
             badgeLabel = "TECH & AI",
             accentColorHex = 0xFF6D28D9, // Deep Purple
             iconType = "science"
