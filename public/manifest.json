@@ -1,0 +1,43 @@
+{
+  "name": "Daily Brief",
+  "short_name": "Daily Brief",
+  "description": "Daily Brief executive news summaries, stock picks, mutual funds, newspapers & magazines.",
+  "start_url": "/",
+  "id": "/",
+  "display": "standalone",
+  "background_color": "#090d16",
+  "theme_color": "#2563eb",
+  "orientation": "any",
+  "categories": ["news", "finance", "business", "productivity"],
+  "icons": [
+    {
+      "src": "/assets/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/assets/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Newspaper Corner",
+      "url": "/?tab=newspapers",
+      "description": "Daily English Newspaper E-Editions"
+    },
+    {
+      "name": "Magazine Corner",
+      "url": "/?tab=magazines",
+      "description": "Popular E-Magazines"
+    },
+    {
+      "name": "Recommendations",
+      "url": "/?tab=recommendations",
+      "description": "Indian Stock Picks & Mutual Funds"
+    }
+  ]
+}

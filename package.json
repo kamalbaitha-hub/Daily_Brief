@@ -1,0 +1,15 @@
+{
+  "name": "applet",
+  "version": "1.0.0",
+  "description": "**Daily Brief** is an executive news briefing platform engineered with a **Node.js + Express backend** and a **Jetpack Compose Android app**. It automatically aggregates breaking news across six key verticals, summarizes each story into 3–5 high-impact bullet lines using the OpenAI API, stores briefings in SQLite, and synchronizes with an offline-first Android client with daily 8:00 AM push notifications.",
+  "main": "backend/src/server.js",
+  "scripts": {
+    "start": "node backend/src/server.js",
+    "dev": "node --watch backend/src/server.js",
+    "refresh": "node -e \"require('./backend/src/fetcher').runDailyUpdate().then(() => console.log('Update complete')).catch(console.error)\"",
+    "test": "echo \"No test specified\" && exit 0"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

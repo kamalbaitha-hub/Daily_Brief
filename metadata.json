@@ -1,0 +1,6 @@
+{
+  "name": "Daily Brief",
+  "description": "Full-stack news briefing app featuring AI summarization, category cards, offline Room persistence, and scheduled notifications.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

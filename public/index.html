@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  
+  <!-- Primary Meta Tags -->
+  <title>Daily Brief - Executive News, E-Papers & Market Picks</title>
+  <meta name="title" content="Daily Brief - Executive News, E-Papers & Market Picks" />
+  <meta name="description" content="Progressive Web App for Daily Brief: Executive news summaries, Newspaper Corner, Magazine Corner, and Indian Stock/Mutual Fund recommendations." />
+
+  <!-- PWA & Mobile Capabilities -->
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#2563eb" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Daily Brief" />
+  <link rel="apple-touch-icon" href="/assets/icon-192.png" />
+  <link rel="icon" type="image/png" href="/assets/icon-192.png" />
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+
+  <!-- Top App Header -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="brand-section">
+        <div class="brand-logo">DB</div>
+        <div>
+          <div class="brand-title">Daily Brief</div>
+          <div class="brand-subtitle">Executive Intelligence & Digital Periodicals</div>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <!-- Install PWA on Laptop/Desktop Button -->
+        <button id="btn-install-header" class="btn-install-pwa" title="Install Daily Brief on your Laptop or Desktop">
+          <span>💻</span>
+          <span>Install App</span>
+        </button>
+
+        <!-- Refresh Button -->
+        <button id="btn-refresh" class="btn-icon" title="Refresh Live News">
+          🔄
+        </button>
+
+        <!-- Dark/Light Theme Toggle -->
+        <button id="btn-theme-toggle" class="btn-icon" title="Toggle Dark/Light Mode">
+          <span id="theme-icon">☀️</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Category & Corner Navigation Bar -->
+  <nav class="filter-bar-wrapper">
+    <div class="filter-bar">
+      <button class="filter-chip active" data-category="all">
+        🌐 All Briefs
+      </button>
+      <button class="filter-chip" data-category="newspapers" style="border-color: #3b82f6; font-weight: 700;">
+        📰 Newspaper Corner
+      </button>
+      <button class="filter-chip" data-category="magazines" style="border-color: #ef4444; font-weight: 700;">
+        📖 Magazine Corner
+      </button>
+      <button class="filter-chip" data-category="recommendations" style="border-color: #10b981; font-weight: 700;">
+        📈 Recommendations
+      </button>
+      <button class="filter-chip" data-category="Global markets & economy">
+        Global Markets
+      </button>
+      <button class="filter-chip" data-category="Indian stock market & IPO">
+        Indian Stocks & IPO
+      </button>
+      <button class="filter-chip" data-category="Railways & infrastructure">
+        Railways & Infra
+      </button>
+      <button class="filter-chip" data-category="Technology & AI">
+        Technology & AI
+      </button>
+      <button class="filter-chip" data-category="Health & fitness">
+        Health & Fitness
+      </button>
+      <button class="filter-chip" data-category="General news">
+        General News
+      </button>
+    </div>
+  </nav>
+
+  <!-- Main Content Area -->
+  <main class="main-container">
+    <div id="main-content">
+      <!-- Injected dynamically by app.js -->
+    </div>
+  </main>
+
+  <!-- PWA Install Prompt Card (Bottom Right on Laptop/Desktop browsers) -->
+  <div id="pwa-install-toast" class="pwa-prompt-modal">
+    <div style="display: flex; gap: 12px; align-items: flex-start; margin-bottom: 12px;">
+      <div style="font-size: 1.8rem;">💻</div>
+      <div>
+        <h4 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 4px;">Install Daily Brief</h4>
+        <p style="font-size: 0.8rem; color: #94a3b8; line-height: 1.35;">Install Daily Brief as a standalone app on your laptop or desktop with offline access and desktop notifications.</p>
+      </div>
+    </div>
+    <div style="display: flex; justify-content: flex-end; gap: 8px;">
+      <button id="btn-pwa-dismiss" class="filter-chip" style="font-size: 0.75rem; padding: 4px 10px;">Later</button>
+      <button id="btn-pwa-install-now" class="btn-install-pwa" style="font-size: 0.75rem; padding: 5px 12px;">Install Now</button>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="/data.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>

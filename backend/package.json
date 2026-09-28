@@ -1,0 +1,19 @@
+{
+  "name": "daily-brief-backend",
+  "version": "1.0.0",
+  "description": "Full-stack backend for Daily Brief: fetches news, summarizes with OpenAI, stores in SQLite, schedules daily at 7 AM IST, and serves /api/brief.",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "refresh": "node -e \"require('./src/fetcher').runDailyUpdate().then(() => console.log('Update complete')).catch(console.error)\""
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "node-cron": "^3.0.3",
+    "rss-parser": "^3.13.0",
+    "better-sqlite3": "^11.8.1"
+  }
+}
