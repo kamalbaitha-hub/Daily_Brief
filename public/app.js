@@ -2,6 +2,9 @@
 
 let currentCategory = 'all'; // 'all', 'newspapers', 'magazines', 'recommendations', or specific category
 let recSubTab = 'stocks'; // 'stocks' or 'funds'
+let recRegionTab = 'all'; // 'all', 'indian', 'global'
+let recSearchQuery = '';
+let magSubTab = 'all'; // 'all', 'hindi', 'national', 'international'
 let deferredPrompt = null;
 let articlesList = [...INITIAL_ARTICLES];
 
@@ -209,24 +212,59 @@ function renderNewspaperCorner(container) {
 }
 
 // 2. Magazine Corner View
+function switchMagTab(tab) {
+  magSubTab = tab;
+  renderApp();
+}
+
 function renderMagazineCorner(container) {
+  let displayedMagazines = MAGAZINES;
+  if (magSubTab === 'hindi') {
+    displayedMagazines = MAGAZINES.filter(m => m.region === 'Hindi Entertainment');
+  } else if (magSubTab === 'national') {
+    displayedMagazines = MAGAZINES.filter(m => m.region === 'National');
+  } else if (magSubTab === 'international') {
+    displayedMagazines = MAGAZINES.filter(m => m.region === 'International');
+  }
+
+  const allCount = MAGAZINES.length;
+  const hindiCount = MAGAZINES.filter(m => m.region === 'Hindi Entertainment').length;
+  const nationalCount = MAGAZINES.filter(m => m.region === 'National').length;
+  const intlCount = MAGAZINES.filter(m => m.region === 'International').length;
+
   container.innerHTML = `
     <div class="section-banner" style="border-color: rgba(220, 38, 38, 0.4); background: linear-gradient(135deg, rgba(220, 38, 38, 0.15), rgba(234, 88, 12, 0.1));">
       <div class="section-banner-text">
         <span style="font-size: 0.75rem; font-weight: 800; color: #f87171; letter-spacing: 0.05em; display: block; margin-bottom: 4px;">📖 MAGAZINE CORNER</span>
         <h2>Popular E-Magazines & Periodicals</h2>
-        <p>Curated monthly and fortnightly digests covering Politics, Science, Business, and Health & Nutrition.</p>
+        <p>Curated digests covering National, International, Hindi Entertainment, and Business.</p>
       </div>
-      <div style="font-size: 0.85rem; color: #94a3b8; font-weight: 600;">${MAGAZINES.length} Magazines Available</div>
+      <div style="font-size: 0.85rem; color: #94a3b8; font-weight: 600;">${displayedMagazines.length} Magazines Showing</div>
+    </div>
+
+    <!-- Region Filter Tabs -->
+    <div class="sub-tabs-row" style="margin-bottom: 18px; display: flex; flex-wrap: wrap; gap: 8px;">
+      <button class="sub-tab-btn ${magSubTab === 'all' ? 'active' : ''}" onclick="switchMagTab('all')">
+        All (${allCount})
+      </button>
+      <button class="sub-tab-btn ${magSubTab === 'hindi' ? 'active' : ''}" onclick="switchMagTab('hindi')">
+        Hindi Entertainment (${hindiCount})
+      </button>
+      <button class="sub-tab-btn ${magSubTab === 'national' ? 'active' : ''}" onclick="switchMagTab('national')">
+        National (${nationalCount})
+      </button>
+      <button class="sub-tab-btn ${magSubTab === 'international' ? 'active' : ''}" onclick="switchMagTab('international')">
+        International (${intlCount})
+      </button>
     </div>
 
     <div class="tiles-grid">
-      ${MAGAZINES.map((item) => `
+      ${displayedMagazines.map((item) => `
         <div class="pub-tile" onclick="window.open('${item.eEditionUrl}', '_blank', 'noopener,noreferrer')">
           <div>
             <div class="pub-tile-top">
               <div class="pub-icon-box" style="background: ${item.accentColor}22; color: ${item.accentColor}">
-                ${item.icon === 'science' ? '🔬' : item.icon === 'business' ? '💼' : item.icon === 'health' ? '❤️' : '📖'}
+                ${item.icon === 'science' ? '🔬' : item.icon === 'business' ? '💼' : item.icon === 'entertainment' ? '🎬' : item.icon === 'international' ? '🌐' : '📖'}
               </div>
               <div class="pub-external-icon">↗</div>
             </div>
@@ -247,22 +285,65 @@ function renderMagazineCorner(container) {
 
 // 3. Recommendations Section (Stocks & Mutual Funds)
 function renderRecommendationsSection(container) {
+  const indianStocksCount = STOCK_PICKS.filter(s => !s.isInternational).length;
+  const globalStocksCount = STOCK_PICKS.filter(s => s.isInternational).length;
+  const domesticFundsCount = MUTUAL_FUNDS.filter(f => !f.isInternational).length;
+  const globalFundsCount = MUTUAL_FUNDS.filter(f => f.isInternational).length;
+
   container.innerHTML = `
     <div class="section-banner" style="border-color: rgba(16, 185, 129, 0.4); background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(5, 150, 105, 0.1));">
       <div class="section-banner-text">
-        <span style="font-size: 0.75rem; font-weight: 800; color: #34d399; letter-spacing: 0.05em; display: block; margin-bottom: 4px;">📈 MARKET RECOMMENDATIONS</span>
-        <h2>Executive Stock Picks & Mutual Funds</h2>
-        <p>Research-backed high-conviction ideas, valuation multiples, and multi-year CAGR mutual fund analysis.</p>
+        <span style="font-size: 0.75rem; font-weight: 800; color: #34d399; letter-spacing: 0.05em; display: block; margin-bottom: 4px;">📈 LATEST RESEARCH • UPDATED SEP 2026</span>
+        <h2>Executive Stock Picks & Mutual Funds (38 Recommendations)</h2>
+        <p>Curated research calls from premier national & global institutions: Goldman Sachs, Morgan Stanley, Motilal Oswal, Vanguard, BlackRock, and PPFAS.</p>
       </div>
     </div>
 
-    <div class="sub-tabs-row">
+    <!-- Main Sub-tabs: Stocks vs Mutual Funds -->
+    <div class="sub-tabs-row" style="margin-bottom: 12px;">
       <button class="sub-tab-btn ${recSubTab === 'stocks' ? 'active' : ''}" onclick="switchRecTab('stocks')">
-        📊 Indian Stock Picks (${STOCK_PICKS.length})
+        📊 Stocks (${STOCK_PICKS.length})
       </button>
       <button class="sub-tab-btn ${recSubTab === 'funds' ? 'active' : ''}" onclick="switchRecTab('funds')">
-        🏛️ Mutual Funds (${MUTUAL_FUNDS.length})
+        🏛️ Mutual Funds & Global ETFs (${MUTUAL_FUNDS.length})
       </button>
+    </div>
+
+    <!-- Region Filter Pills -->
+    <div class="sub-tabs-row" style="margin-bottom: 14px; gap: 8px;">
+      ${recSubTab === 'stocks' ? `
+        <button class="sub-tab-btn ${recRegionTab === 'all' ? 'active' : ''}" onclick="switchRecRegion('all')">
+          All Stocks (${STOCK_PICKS.length})
+        </button>
+        <button class="sub-tab-btn ${recRegionTab === 'indian' ? 'active' : ''}" onclick="switchRecRegion('indian')">
+          🇮🇳 Indian (NSE/BSE) (${indianStocksCount})
+        </button>
+        <button class="sub-tab-btn ${recRegionTab === 'global' ? 'active' : ''}" onclick="switchRecRegion('global')">
+          🌍 Global (${globalStocksCount})
+        </button>
+      ` : `
+        <button class="sub-tab-btn ${recRegionTab === 'all' ? 'active' : ''}" onclick="switchRecRegion('all')">
+          All Funds (${MUTUAL_FUNDS.length})
+        </button>
+        <button class="sub-tab-btn ${recRegionTab === 'indian' ? 'active' : ''}" onclick="switchRecRegion('indian')">
+          🇮🇳 Domestic AMCs (${domesticFundsCount})
+        </button>
+        <button class="sub-tab-btn ${recRegionTab === 'global' ? 'active' : ''}" onclick="switchRecRegion('global')">
+          🌍 Global ETFs (${globalFundsCount})
+        </button>
+      `}
+    </div>
+
+    <!-- Search Input -->
+    <div style="margin-bottom: 16px;">
+      <input
+        type="text"
+        id="rec-search-input"
+        placeholder="${recSubTab === 'stocks' ? 'Search stock ticker, name, or broker (e.g. Goldman, Motilal, NVDA, L&T)...' : 'Search fund, house (e.g. Vanguard, PPFAS, BlackRock)...'}"
+        value="${recSearchQuery}"
+        oninput="handleRecSearch(this.value)"
+        style="width: 100%; padding: 10px 14px; border-radius: 10px; background: var(--bg-surface); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.9rem;"
+      />
     </div>
 
     ${recSubTab === 'stocks' ? renderStocksList() : renderFundsList()}
@@ -271,18 +352,62 @@ function renderRecommendationsSection(container) {
 
 function switchRecTab(tab) {
   recSubTab = tab;
+  recRegionTab = 'all';
+  recSearchQuery = '';
   renderApp();
 }
 
+function switchRecRegion(region) {
+  recRegionTab = region;
+  renderApp();
+}
+
+function handleRecSearch(query) {
+  recSearchQuery = query;
+  const listContainer = document.getElementById('rec-list-container');
+  if (listContainer) {
+    listContainer.outerHTML = recSubTab === 'stocks' ? renderStocksList() : renderFundsList();
+  } else {
+    renderApp();
+  }
+}
+
 function renderStocksList() {
+  const filtered = STOCK_PICKS.filter(stock => {
+    const matchesRegion = recRegionTab === 'indian' ? !stock.isInternational :
+                          recRegionTab === 'global' ? stock.isInternational : true;
+    const q = recSearchQuery.toLowerCase().trim();
+    const matchesQuery = !q ? true : (
+      stock.symbol.toLowerCase().includes(q) ||
+      stock.companyName.toLowerCase().includes(q) ||
+      stock.sector.toLowerCase().includes(q) ||
+      (stock.researchSource && stock.researchSource.toLowerCase().includes(q))
+    );
+    return matchesRegion && matchesQuery;
+  });
+
+  if (filtered.length === 0) {
+    return `<div id="rec-list-container" style="text-align: center; padding: 40px; color: #94a3b8;">No stock recommendations match your criteria.</div>`;
+  }
+
   return `
-    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px;">
-      ${STOCK_PICKS.map((stock) => `
+    <div id="rec-list-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px;">
+      ${filtered.map((stock) => `
         <div class="article-card">
+          <!-- Institutional Source Tag -->
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <span style="background: rgba(59, 130, 246, 0.15); color: #60a5fa; font-size: 0.72rem; font-weight: 700; padding: 3px 8px; border-radius: 6px;">
+              🏛️ ${stock.researchSource || 'Institutional Research'}
+            </span>
+            <span style="font-size: 0.7rem; color: #10b981; font-weight: 600;">
+              ${stock.isInternational ? '🌍 Global' : '🇮🇳 NSE/BSE'} • Sep 2026
+            </span>
+          </div>
+
           <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
             <div>
               <div style="font-size: 1.15rem; font-weight: 800;">${stock.companyName}</div>
-              <div style="font-size: 0.8rem; color: #94a3b8; font-weight: 600;">NSE/BSE: ${stock.symbol} • ${stock.sector}</div>
+              <div style="font-size: 0.8rem; color: #94a3b8; font-weight: 600;">${stock.symbol} • ${stock.sector}</div>
             </div>
             <span style="background: rgba(16, 185, 129, 0.15); color: #10b981; font-size: 0.75rem; font-weight: 800; padding: 4px 8px; border-radius: 6px;">
               ${stock.action}
@@ -322,14 +447,41 @@ function renderStocksList() {
 }
 
 function renderFundsList() {
+  const filtered = MUTUAL_FUNDS.filter(fund => {
+    const matchesRegion = recRegionTab === 'indian' ? !fund.isInternational :
+                          recRegionTab === 'global' ? fund.isInternational : true;
+    const q = recSearchQuery.toLowerCase().trim();
+    const matchesQuery = !q ? true : (
+      fund.fundName.toLowerCase().includes(q) ||
+      fund.fundHouse.toLowerCase().includes(q) ||
+      fund.category.toLowerCase().includes(q) ||
+      (fund.researchSource && fund.researchSource.toLowerCase().includes(q))
+    );
+    return matchesRegion && matchesQuery;
+  });
+
+  if (filtered.length === 0) {
+    return `<div id="rec-list-container" style="text-align: center; padding: 40px; color: #94a3b8;">No mutual fund recommendations match your criteria.</div>`;
+  }
+
   return `
-    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px;">
-      ${MUTUAL_FUNDS.map((fund) => `
+    <div id="rec-list-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px;">
+      ${filtered.map((fund) => `
         <div class="article-card">
+          <!-- Institutional Source Tag -->
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <span style="background: rgba(168, 85, 247, 0.15); color: #c084fc; font-size: 0.72rem; font-weight: 700; padding: 3px 8px; border-radius: 6px;">
+              🏛️ ${fund.fundHouse}
+            </span>
+            <span style="font-size: 0.7rem; color: #10b981; font-weight: 600;">
+              ${fund.isInternational ? '🌍 Global ETF' : '🇮🇳 Domestic AMC'} • Sep 2026
+            </span>
+          </div>
+
           <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
             <div>
               <div style="font-size: 1.15rem; font-weight: 800;">${fund.fundName}</div>
-              <div style="font-size: 0.8rem; color: #94a3b8; font-weight: 600;">${fund.fundHouse} • ${fund.category}</div>
+              <div style="font-size: 0.8rem; color: #94a3b8; font-weight: 600;">${fund.category} • Risk: ${fund.riskLevel}</div>
             </div>
             <span style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; font-size: 0.75rem; font-weight: 800; padding: 4px 8px; border-radius: 6px;">
               ${'★'.repeat(fund.rating)} Rating
@@ -355,7 +507,13 @@ function renderFundsList() {
             ${fund.verdictAndAnalysis}
           </p>
 
-          <div style="font-size: 0.75rem; color: #94a3b8; border-top: 1px solid var(--border-color); padding-top: 10px;">
+          <div style="display: flex; justify-content: space-between; font-size: 0.72rem; color: #94a3b8; margin-bottom: 8px;">
+            <span>NAV: ${fund.nav}</span>
+            <span>Exp: ${fund.expenseRatio}</span>
+            <span>AUM: ${fund.aum}</span>
+          </div>
+
+          <div style="font-size: 0.75rem; color: #cbd5e1; border-top: 1px solid var(--border-color); padding-top: 10px;">
             <strong>Top Holdings:</strong> ${fund.topHoldings.join(', ')}
           </div>
         </div>

@@ -199,7 +199,8 @@ class DailyBriefViewModel(application: Application) : AndroidViewModel(applicati
             val result = com.example.update.GitHubUpdateManager.checkForUpdates(
                 context = getApplication(),
                 repoOwner = state.githubOwner,
-                repoName = state.githubRepo
+                repoName = state.githubRepo,
+                serverUrl = state.serverUrl
             )
 
             result.fold(

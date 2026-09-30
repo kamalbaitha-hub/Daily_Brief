@@ -7,6 +7,7 @@ import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,6 +27,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -35,6 +37,7 @@ import androidx.compose.material.icons.filled.Business
 import androidx.compose.material.icons.filled.Eco
 import androidx.compose.material.icons.filled.HealthAndSafety
 import androidx.compose.material.icons.filled.Memory
+import androidx.compose.material.icons.filled.Movie
 import androidx.compose.material.icons.filled.Newspaper
 import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.Science
@@ -45,6 +48,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -136,6 +143,29 @@ fun MagazineCornerSection(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    var selectedRegion by remember { mutableStateOf("All") }
+
+    val allCount = PublicationCornerData.MAGAZINES.size
+    val hindiCount = PublicationCornerData.MAGAZINES.count { it.region == "Hindi Entertainment" }
+    val nationalCount = PublicationCornerData.MAGAZINES.count { it.region == "National" }
+    val intlCount = PublicationCornerData.MAGAZINES.count { it.region == "International" }
+
+    val filterChips = listOf(
+        "All" to "All ($allCount)",
+        "Hindi Entertainment" to "Hindi Entertainment ($hindiCount)",
+        "National" to "National ($nationalCount)",
+        "International" to "International ($intlCount)"
+    )
+
+    val displayedItems = remember(selectedRegion) {
+        when (selectedRegion) {
+            "All" -> PublicationCornerData.MAGAZINES
+            "Hindi Entertainment" -> PublicationCornerData.MAGAZINES.filter { it.region == "Hindi Entertainment" }
+            "National" -> PublicationCornerData.MAGAZINES.filter { it.region == "National" }
+            "International" -> PublicationCornerData.MAGAZINES.filter { it.region == "International" }
+            else -> PublicationCornerData.MAGAZINES
+        }
+    }
 
     Column(
         modifier = modifier
@@ -182,9 +212,37 @@ fun MagazineCornerSection(
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = "Current affairs, Science, Health & Lifestyle, and Business digests",
+                        text = "National, International, Hindi Entertainment, and Business digests",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(14.dp))
+
+        // Region Filter Chips Row
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            filterChips.forEach { (key, label) ->
+                val isSelected = selectedRegion == key
+                Surface(
+                    shape = RoundedCornerShape(20.dp),
+                    color = if (isSelected) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+                    contentColor = if (isSelected) MaterialTheme.colorScheme.onSecondary else MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier
+                        .clickable { selectedRegion = key }
+                        .testTag("mag_filter_$key")
+                ) {
+                    Text(
+                        text = label,
+                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal),
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
                     )
                 }
             }
@@ -194,7 +252,7 @@ fun MagazineCornerSection(
 
         // Grid of Magazine Tiles (2 columns)
         PublicationGrid(
-            items = PublicationCornerData.MAGAZINES,
+            items = displayedItems,
             onItemClick = { item -> openPublicationUrl(context, item) },
             testTagPrefix = "magazine"
         )
@@ -378,6 +436,8 @@ private fun getPublicationIcon(iconType: String): ImageVector {
         "business" -> Icons.Default.Business
         "science" -> Icons.Default.Science
         "health" -> Icons.Default.HealthAndSafety
+        "entertainment" -> Icons.Default.Movie
+        "international" -> Icons.Default.Public
         else -> Icons.Default.Public
     }
 }

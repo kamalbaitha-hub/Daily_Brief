@@ -37,7 +37,8 @@ const MIME_TYPES = {
   '.jpg': 'image/jpeg',
   '.jpeg': 'image/jpeg',
   '.ico': 'image/x-icon',
-  '.svg': 'image/svg+xml'
+  '.svg': 'image/svg+xml',
+  '.apk': 'application/vnd.android.package-archive'
 };
 
 // Helper to set standard CORS & JSON headers
@@ -63,7 +64,10 @@ function serveStaticFile(reqPath, res) {
     const ext = path.extname(filePath).toLowerCase();
     const contentType = MIME_TYPES[ext] || 'application/octet-stream';
     res.setHeader('Content-Type', contentType);
-    if (ext === '.html' || ext === '.json' || ext === '.js') {
+    if (ext === '.apk') {
+      res.setHeader('Content-Disposition', 'attachment; filename="' + path.basename(filePath) + '"');
+      res.setHeader('Cache-Control', 'no-cache');
+    } else if (ext === '.html' || ext === '.json' || ext === '.js') {
       res.setHeader('Cache-Control', 'no-cache');
     } else {
       res.setHeader('Cache-Control', 'public, max-age=86400');
@@ -100,6 +104,24 @@ async function handleRequest(req, res) {
       timestamp: new Date().toISOString(),
       articlesCount: db.getCount(),
       categories: CATEGORIES.map(c => c.name)
+    }, null, 2));
+    return;
+  }
+
+  // 1.5 App Updates Endpoint: GET /api/updates/latest
+  if (pathname === '/api/updates/latest' && req.method === 'GET') {
+    res.setHeader('Content-Type', 'application/json');
+    res.statusCode = 200;
+    res.end(JSON.stringify({
+      hasUpdate: true,
+      latestVersion: '1.4.5',
+      versionCode: 10,
+      tagName: 'v1.4.5',
+      releaseNotes: 'Fresh Market Recommendations update: Added 38 high-conviction national & international stock and mutual fund research calls from Goldman Sachs, Morgan Stanley, Motilal Oswal, Vanguard, BlackRock, and PPFAS with quick region filter tabs and search.',
+      downloadUrl: '/downloads/DailyBrief-v1.4.5.apk',
+      apkName: 'DailyBrief-v1.4.5.apk',
+      releasePageUrl: 'https://github.com/kamalbaitha-hub/Daily_Brief',
+      publishedAt: new Date().toISOString()
     }, null, 2));
     return;
   }

@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
+import android.provider.Settings
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
@@ -47,6 +48,17 @@ data class GitHubAsset(
     @Json(name = "size") val size: Long? = 0,
     @Json(name = "browser_download_url") val browserDownloadUrl: String? = "",
     @Json(name = "content_type") val contentType: String? = ""
+)
+
+@JsonClass(generateAdapter = true)
+data class ServerUpdateDto(
+    @Json(name = "hasUpdate") val hasUpdate: Boolean? = false,
+    @Json(name = "latestVersion") val latestVersion: String? = "",
+    @Json(name = "versionCode") val versionCode: Int? = 0,
+    @Json(name = "tagName") val tagName: String? = "",
+    @Json(name = "releaseNotes") val releaseNotes: String? = "",
+    @Json(name = "downloadUrl") val downloadUrl: String? = "",
+    @Json(name = "releasePageUrl") val releasePageUrl: String? = ""
 )
 
 interface GitHubApiService {
@@ -105,7 +117,8 @@ object GitHubUpdateManager {
     suspend fun checkForUpdates(
         context: Context,
         repoOwner: String,
-        repoName: String
+        repoName: String,
+        serverUrl: String = ""
     ): Result<UpdateInfo> = withContext(Dispatchers.IO) {
         val cleanOwner = repoOwner.trim()
         val cleanRepo = repoName.trim()
@@ -119,13 +132,62 @@ object GitHubUpdateManager {
             packageInfo?.versionName ?: "1.4.0"
         }
 
+        // 1. Check primary & fallback backend server endpoints and raw GitHub version.json
+        val candidateUrls = listOfNotNull(
+            serverUrl.takeIf { it.isNotBlank() },
+            "https://raw.githubusercontent.com/$cleanOwner/$cleanRepo/main/public/version.json",
+            "https://ais-pre-zkymhrkneugz34madqd3s3-951298028561.asia-east1.run.app",
+            "http://10.0.2.2:3000",
+            "http://localhost:3000"
+        ).distinct()
+
+        for (candidate in candidateUrls) {
+            try {
+                val cleanBase = candidate.trim().removeSuffix("/")
+                val reqUrl = if (cleanBase.endsWith(".json")) cleanBase else "$cleanBase/api/updates/latest"
+                val req = Request.Builder()
+                    .url(reqUrl)
+                    .build()
+                val resp = okHttpClient.newCall(req).execute()
+                if (resp.isSuccessful) {
+                    val body = resp.body?.string()
+                    if (!body.isNullOrBlank()) {
+                        val serverUpdate = moshi.adapter(ServerUpdateDto::class.java).fromJson(body)
+                        if (serverUpdate != null) {
+                            val sVer = (serverUpdate.latestVersion ?: serverUpdate.tagName ?: "").removePrefix("v").trim()
+                            if (compareVersions(sVer, currentVersion) > 0) {
+                                val fullDownload = if (serverUpdate.downloadUrl?.startsWith("http") == true) {
+                                    serverUpdate.downloadUrl
+                                } else {
+                                    "$cleanBase${serverUpdate.downloadUrl ?: "/downloads/DailyBrief-v1.4.5.apk"}"
+                                }
+                                val info = UpdateInfo(
+                                    hasUpdate = true,
+                                    latestVersion = sVer.ifBlank { "v$sVer" },
+                                    currentVersion = currentVersion,
+                                    releaseNotes = serverUpdate.releaseNotes ?: "New version $sVer available.",
+                                    downloadUrl = fullDownload,
+                                    releasePageUrl = serverUpdate.releasePageUrl ?: ""
+                                )
+                                handleNotification(context, sVer, true, info)
+                                return@withContext Result.success(info)
+                            }
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                Log.d(TAG, "Server update candidate $candidate check failed: ${e.message}")
+            }
+        }
+
+        // 2. Check GitHub Releases if repo is configured
         if (cleanOwner.isBlank() || cleanRepo.isBlank()) {
             return@withContext Result.success(
                 UpdateInfo(
                     hasUpdate = false,
                     latestVersion = currentVersion,
                     currentVersion = currentVersion,
-                    releaseNotes = "GitHub repository not configured.",
+                    releaseNotes = "You are on the latest version ($currentVersion).",
                     downloadUrl = "",
                     releasePageUrl = ""
                 )
@@ -153,21 +215,7 @@ object GitHubUpdateManager {
                 releasePageUrl = release.htmlUrl ?: ""
             )
 
-            val prefs = context.getSharedPreferences("daily_brief_prefs", Context.MODE_PRIVATE)
-            val lastNotifiedVersion = prefs.getString("last_notified_update_version", null)
-
-            if (isNewer) {
-                // Only post notification once per new version to avoid annoying notification loops
-                if (lastNotifiedVersion != latestTag) {
-                    prefs.edit().putString("last_notified_update_version", latestTag).apply()
-                    notifyUpdateAvailable(context, info)
-                }
-            } else {
-                // If app is already on latest version, dismiss any stale update notification
-                try {
-                    NotificationManagerCompat.from(context).cancel(UPDATE_NOTIFICATION_ID)
-                } catch (e: Exception) {}
-            }
+            handleNotification(context, latestTag, isNewer, info)
 
             Result.success(info)
         } catch (e: HttpException) {
@@ -194,6 +242,16 @@ object GitHubUpdateManager {
         } catch (e: Exception) {
             Log.d(TAG, "Failed to check for updates: ${e.message}")
             Result.failure(e)
+        }
+    }
+
+    private fun handleNotification(context: Context, latestTag: String, isNewer: Boolean, info: UpdateInfo) {
+        if (isNewer) {
+            notifyUpdateAvailable(context, info)
+        } else {
+            try {
+                NotificationManagerCompat.from(context).cancel(UPDATE_NOTIFICATION_ID)
+            } catch (e: Exception) {}
         }
     }
 
@@ -225,22 +283,31 @@ object GitHubUpdateManager {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
+        val iconRes = try {
+            android.R.drawable.stat_sys_download_done
+        } catch (e: Exception) {
+            R.drawable.ic_launcher_foreground
+        }
+
         val builder = NotificationCompat.Builder(context, UPDATE_CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setSmallIcon(iconRes)
             .setContentTitle("Daily Brief Update Available")
             .setContentText("Version ${updateInfo.latestVersion} is ready to install.")
             .setStyle(
                 NotificationCompat.BigTextStyle()
                     .bigText("A new update (${updateInfo.latestVersion}) is available. Tap to review release notes and install.")
             )
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
 
         try {
             NotificationManagerCompat.from(context).notify(UPDATE_NOTIFICATION_ID, builder.build())
+            Log.d(TAG, "Successfully posted update notification for ${updateInfo.latestVersion}")
         } catch (e: SecurityException) {
             Log.w(TAG, "Notification permission denied: ${e.message}")
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to display update notification: ${e.message}")
         }
     }
 
@@ -296,6 +363,18 @@ object GitHubUpdateManager {
 
     fun installApk(context: Context, apkFile: File) {
         try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                if (!context.packageManager.canRequestPackageInstalls()) {
+                    Log.i(TAG, "Prompting user for REQUEST_INSTALL_PACKAGES permission")
+                    val settingsIntent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply {
+                        data = Uri.parse("package:${context.packageName}")
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                    }
+                    context.startActivity(settingsIntent)
+                    return
+                }
+            }
+
             val contentUri: Uri = FileProvider.getUriForFile(
                 context,
                 "${context.packageName}.fileprovider",

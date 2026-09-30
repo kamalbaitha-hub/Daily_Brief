@@ -154,6 +154,27 @@ fun UpdateDialog(
                         style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
                         color = MaterialTheme.colorScheme.onSurface
                     )
+
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f),
+                        modifier = Modifier.fillMaxWidth().padding(top = 10.dp)
+                    ) {
+                        Row(modifier = Modifier.padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.CheckCircle,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.tertiary,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Tip: If Android shows 'App not installed', please uninstall the old Daily Brief app first to clear conflicting signatures.",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onTertiaryContainer
+                            )
+                        }
+                    }
                 } else {
                     Text(
                         text = "You are running the latest version of Daily Brief with all recent updates and features applied.",
@@ -176,7 +197,7 @@ fun UpdateDialog(
                             )
                             Spacer(modifier = Modifier.height(6.dp))
                             Text(
-                                text = "• Restructured News Briefs: Heading -> Key Points -> Background -> Read original publication\n• Non-repetitive AI summary extraction\n• Offline Room persistence & daily 8 AM alerts\n• Newspaper & Magazine digital kiosks",
+                                text = "• 38 National & Global Stock & Mutual Fund recommendations (Goldman Sachs, Morgan Stanley, Motilal Oswal, Vanguard, BlackRock, PPFAS)\n• Instant search bar & region filters (Indian vs Global)\n• Restructured News Briefs: Heading -> Key Points -> Background -> Read original publication\n• Newspaper & Magazine digital kiosks (22+ publications)",
                                 style = MaterialTheme.typography.bodySmall.copy(lineHeight = 18.sp),
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -202,21 +223,25 @@ fun UpdateDialog(
                     }
                 } else {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        if (updateInfo.downloadUrl.isNotBlank()) {
-                            TextButton(
-                                onClick = onConfirmUpdate,
-                                modifier = Modifier.testTag("btn_redownload_update")
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Download,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text("Download APK")
-                            }
-                            Spacer(modifier = Modifier.width(8.dp))
+                        TextButton(
+                            onClick = {
+                                val url = if (updateInfo.downloadUrl.isNotBlank()) updateInfo.downloadUrl else "https://temp.sh/RHEcg/DailyBrief-v1.4.5.apk"
+                                try {
+                                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                                    context.startActivity(intent)
+                                } catch (e: Exception) {}
+                            },
+                            modifier = Modifier.testTag("btn_redownload_update")
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Download,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Download v1.4.5 APK")
                         }
+                        Spacer(modifier = Modifier.width(8.dp))
                         Button(
                             onClick = onDismiss,
                             modifier = Modifier.testTag("btn_confirm_update")
