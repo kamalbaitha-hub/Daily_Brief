@@ -25,7 +25,7 @@ const { getDatabase } = require('./db');
 const { CATEGORIES, seedDatabaseIfEmpty, runDailyUpdate } = require('./fetcher');
 const { initScheduler } = require('./scheduler');
 
-const PORT = parseInt(process.env.DEFAULT_APP_PORT || process.env.BACKEND_PORT || '3000', 10);
+const PORT = 3000;
 const PUBLIC_DIR = path.resolve(__dirname, '../../public');
 
 const MIME_TYPES = {
