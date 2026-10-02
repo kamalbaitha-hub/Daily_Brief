@@ -64,20 +64,22 @@ import com.example.data.model.MutualFundRecommendation
 import com.example.data.model.RecommendationsData
 import com.example.data.model.StockPick
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun RecommendationsSection(
     modifier: Modifier = Modifier
 ) {
-    var selectedSubTab by remember { mutableIntStateOf(0) } // 0: Stock Picks, 1: Mutual Funds
-    var stockRegionFilter by remember { mutableIntStateOf(0) } // 0: All, 1: Indian, 2: Global
-    var fundRegionFilter by remember { mutableIntStateOf(0) } // 0: All, 1: National AMCs, 2: Global ETFs
+    var selectedSectorFilter by remember { mutableIntStateOf(0) } // 0: All, 1: Defence & Infra, 2: Banking, 3: IT & Telecom, 4: Auto & Conglomerate, 5: Pharma & FMCG
     var searchQuery by remember { mutableStateOf("") }
 
-    val filteredStocks = remember(stockRegionFilter, searchQuery) {
+    val filteredStocks = remember(selectedSectorFilter, searchQuery) {
         RecommendationsData.ALL_STOCK_PICKS.filter { stock ->
-            val matchesRegion = when (stockRegionFilter) {
-                1 -> !stock.isInternational
-                2 -> stock.isInternational
+            val matchesSector = when (selectedSectorFilter) {
+                1 -> stock.sector.contains("Defence", ignoreCase = true) || stock.sector.contains("Infrastructure", ignoreCase = true) || stock.sector.contains("Engineering", ignoreCase = true) || stock.sector.contains("Aerospace", ignoreCase = true)
+                2 -> stock.sector.contains("Bank", ignoreCase = true) || stock.sector.contains("Financial", ignoreCase = true)
+                3 -> stock.sector.contains("IT", ignoreCase = true) || stock.sector.contains("Technology", ignoreCase = true) || stock.sector.contains("Telecom", ignoreCase = true)
+                4 -> stock.sector.contains("Automobile", ignoreCase = true) || stock.sector.contains("Conglomerate", ignoreCase = true) || stock.sector.contains("Energy", ignoreCase = true)
+                5 -> stock.sector.contains("Pharma", ignoreCase = true) || stock.sector.contains("FMCG", ignoreCase = true)
                 else -> true
             }
             val matchesSearch = if (searchQuery.isBlank()) true else {
@@ -86,24 +88,7 @@ fun RecommendationsSection(
                     stock.sector.contains(searchQuery, ignoreCase = true) ||
                     stock.researchSource.contains(searchQuery, ignoreCase = true)
             }
-            matchesRegion && matchesSearch
-        }
-    }
-
-    val filteredFunds = remember(fundRegionFilter, searchQuery) {
-        RecommendationsData.ALL_MUTUAL_FUNDS.filter { fund ->
-            val matchesRegion = when (fundRegionFilter) {
-                1 -> !fund.isInternational
-                2 -> fund.isInternational
-                else -> true
-            }
-            val matchesSearch = if (searchQuery.isBlank()) true else {
-                fund.fundName.contains(searchQuery, ignoreCase = true) ||
-                    fund.fundHouse.contains(searchQuery, ignoreCase = true) ||
-                    fund.category.contains(searchQuery, ignoreCase = true) ||
-                    fund.researchSource.contains(searchQuery, ignoreCase = true)
-            }
-            matchesRegion && matchesSearch
+            matchesSector && matchesSearch
         }
     }
 
@@ -140,10 +125,10 @@ fun RecommendationsSection(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "FRESH & LATEST RECOMMENDATIONS • UPDATED SEP 2026",
+                        text = "🇮🇳 TOP INDIAN EQUITIES • RESEARCH BY MOTILAL OSWAL, GOLDMAN SACHS & MORGAN STANLEY",
                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                         color = Color(0xFF059669),
-                        fontSize = 11.sp
+                        fontSize = 10.5.sp
                     )
                 }
             }
@@ -160,7 +145,7 @@ fun RecommendationsSection(
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
-                            imageVector = Icons.Default.AutoGraph,
+                            imageVector = Icons.Default.TrendingUp,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.onPrimaryContainer,
                             modifier = Modifier.size(22.dp)
@@ -170,7 +155,7 @@ fun RecommendationsSection(
                 Spacer(modifier = Modifier.width(12.dp))
                 Column {
                     Text(
-                        text = "EXECUTIVE MARKET RESEARCH",
+                        text = "INDIAN STOCK RECOMMENDATIONS",
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontWeight = FontWeight.ExtraBold,
                             letterSpacing = 1.sp
@@ -178,7 +163,7 @@ fun RecommendationsSection(
                         color = MaterialTheme.colorScheme.primary
                     )
                     Text(
-                        text = "National & Global Brokerage & Fund House Picks",
+                        text = "High-Conviction National Equities (${RecommendationsData.ALL_STOCK_PICKS.size} Research Picks)",
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                         color = MaterialTheme.colorScheme.onSurface
                     )
@@ -187,125 +172,66 @@ fun RecommendationsSection(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // Sub-tabs: Stocks vs Mutual Funds
-            TabRow(
-                selectedTabIndex = selectedSubTab,
-                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                indicator = { tabPositions ->
-                    TabRowDefaults.SecondaryIndicator(
-                        Modifier.tabIndicatorOffset(tabPositions[selectedSubTab]),
-                        color = MaterialTheme.colorScheme.primary,
-                        height = 3.dp
-                    )
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(12.dp))
-            ) {
-                Tab(
-                    selected = selectedSubTab == 0,
-                    onClick = { selectedSubTab = 0 },
-                    text = {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = Icons.Default.TrendingUp,
-                                contentDescription = null,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(
-                                text = "Stocks (${RecommendationsData.ALL_STOCK_PICKS.size})",
-                                fontWeight = if (selectedSubTab == 0) FontWeight.Bold else FontWeight.Medium
-                            )
-                        }
-                    },
-                    modifier = Modifier.testTag("tab_recommendation_stocks")
-                )
-                Tab(
-                    selected = selectedSubTab == 1,
-                    onClick = { selectedSubTab = 1 },
-                    text = {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = Icons.Default.PieChart,
-                                contentDescription = null,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(
-                                text = "Mutual Funds & ETFs (${RecommendationsData.ALL_MUTUAL_FUNDS.size})",
-                                fontWeight = if (selectedSubTab == 1) FontWeight.Bold else FontWeight.Medium
-                            )
-                        }
-                    },
-                    modifier = Modifier.testTag("tab_recommendation_funds")
-                )
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Quick Filter Chips (National vs International vs All)
-            Row(
+            // Sector Filter Chips
+            FlowRow(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                if (selectedSubTab == 0) {
-                    FilterChip(
-                        selected = stockRegionFilter == 0,
-                        onClick = { stockRegionFilter = 0 },
-                        label = { Text("All (${RecommendationsData.ALL_STOCK_PICKS.size})", fontSize = 12.sp) },
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = MaterialTheme.colorScheme.primary,
-                            selectedLabelColor = MaterialTheme.colorScheme.onPrimary
-                        )
+                FilterChip(
+                    selected = selectedSectorFilter == 0,
+                    onClick = { selectedSectorFilter = 0 },
+                    label = { Text("All (${RecommendationsData.ALL_STOCK_PICKS.size})", fontSize = 12.sp) },
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = MaterialTheme.colorScheme.primary,
+                        selectedLabelColor = MaterialTheme.colorScheme.onPrimary
                     )
-                    FilterChip(
-                        selected = stockRegionFilter == 1,
-                        onClick = { stockRegionFilter = 1 },
-                        label = { Text("🇮🇳 Indian (${RecommendationsData.INDIAN_STOCK_PICKS.size})", fontSize = 12.sp) },
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = MaterialTheme.colorScheme.primary,
-                            selectedLabelColor = MaterialTheme.colorScheme.onPrimary
-                        )
+                )
+                FilterChip(
+                    selected = selectedSectorFilter == 1,
+                    onClick = { selectedSectorFilter = 1 },
+                    label = { Text("Defence & Infra", fontSize = 12.sp) },
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = MaterialTheme.colorScheme.primary,
+                        selectedLabelColor = MaterialTheme.colorScheme.onPrimary
                     )
-                    FilterChip(
-                        selected = stockRegionFilter == 2,
-                        onClick = { stockRegionFilter = 2 },
-                        label = { Text("🌍 Global (${RecommendationsData.INTERNATIONAL_STOCK_PICKS.size})", fontSize = 12.sp) },
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = MaterialTheme.colorScheme.primary,
-                            selectedLabelColor = MaterialTheme.colorScheme.onPrimary
-                        )
+                )
+                FilterChip(
+                    selected = selectedSectorFilter == 2,
+                    onClick = { selectedSectorFilter = 2 },
+                    label = { Text("Banking & Finance", fontSize = 12.sp) },
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = MaterialTheme.colorScheme.primary,
+                        selectedLabelColor = MaterialTheme.colorScheme.onPrimary
                     )
-                } else {
-                    FilterChip(
-                        selected = fundRegionFilter == 0,
-                        onClick = { fundRegionFilter = 0 },
-                        label = { Text("All (${RecommendationsData.ALL_MUTUAL_FUNDS.size})", fontSize = 12.sp) },
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = MaterialTheme.colorScheme.primary,
-                            selectedLabelColor = MaterialTheme.colorScheme.onPrimary
-                        )
+                )
+                FilterChip(
+                    selected = selectedSectorFilter == 3,
+                    onClick = { selectedSectorFilter = 3 },
+                    label = { Text("IT & Telecom", fontSize = 12.sp) },
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = MaterialTheme.colorScheme.primary,
+                        selectedLabelColor = MaterialTheme.colorScheme.onPrimary
                     )
-                    FilterChip(
-                        selected = fundRegionFilter == 1,
-                        onClick = { fundRegionFilter = 1 },
-                        label = { Text("🇮🇳 Domestic AMCs (${RecommendationsData.MUTUAL_FUND_RECOMMENDATIONS.size})", fontSize = 12.sp) },
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = MaterialTheme.colorScheme.primary,
-                            selectedLabelColor = MaterialTheme.colorScheme.onPrimary
-                        )
+                )
+                FilterChip(
+                    selected = selectedSectorFilter == 4,
+                    onClick = { selectedSectorFilter = 4 },
+                    label = { Text("Auto & Energy", fontSize = 12.sp) },
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = MaterialTheme.colorScheme.primary,
+                        selectedLabelColor = MaterialTheme.colorScheme.onPrimary
                     )
-                    FilterChip(
-                        selected = fundRegionFilter == 2,
-                        onClick = { fundRegionFilter = 2 },
-                        label = { Text("🌍 Global ETFs (${RecommendationsData.GLOBAL_MUTUAL_FUNDS.size})", fontSize = 12.sp) },
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = MaterialTheme.colorScheme.primary,
-                            selectedLabelColor = MaterialTheme.colorScheme.onPrimary
-                        )
+                )
+                FilterChip(
+                    selected = selectedSectorFilter == 5,
+                    onClick = { selectedSectorFilter = 5 },
+                    label = { Text("Pharma & FMCG", fontSize = 12.sp) },
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = MaterialTheme.colorScheme.primary,
+                        selectedLabelColor = MaterialTheme.colorScheme.onPrimary
                     )
-                }
+                )
             }
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -316,8 +242,7 @@ fun RecommendationsSection(
                 onValueChange = { searchQuery = it },
                 placeholder = {
                     Text(
-                        text = if (selectedSubTab == 0) "Search stock, broker (e.g. Goldman, Motilal, NVDA)..."
-                        else "Search fund, house (e.g. Vanguard, PPFAS, BlackRock)...",
+                        text = "Search stock, broker, or ticker (e.g. BEL, Motilal, TCS, Reliance)...",
                         fontSize = 12.sp
                     )
                 },
@@ -346,43 +271,22 @@ fun RecommendationsSection(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // Tab Content
-            if (selectedSubTab == 0) {
-                if (filteredStocks.isEmpty()) {
-                    Box(
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "No stock recommendations match '$searchQuery'",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                } else {
-                    Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                        filteredStocks.forEach { stock ->
-                            StockPickCard(stock = stock)
-                        }
-                    }
+            // Indian Stocks List
+            if (filteredStocks.isEmpty()) {
+                Box(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "No Indian stock recommendations match '$searchQuery'",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             } else {
-                if (filteredFunds.isEmpty()) {
-                    Box(
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "No mutual fund recommendations match '$searchQuery'",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                } else {
-                    Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                        filteredFunds.forEach { fund ->
-                            MutualFundCard(fund = fund)
-                        }
+                Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                    filteredStocks.forEach { stock ->
+                        StockPickCard(stock = stock)
                     }
                 }
             }
