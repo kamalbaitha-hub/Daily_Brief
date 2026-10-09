@@ -250,32 +250,11 @@ fun UpdateDialog(
                         }
                     }
                 } else {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        TextButton(
-                            onClick = {
-                                val url = if (updateInfo.downloadUrl.isNotBlank()) updateInfo.downloadUrl else "https://temp.sh/RHEcg/DailyBrief-v1.4.5.apk"
-                                try {
-                                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-                                    context.startActivity(intent)
-                                } catch (e: Exception) {}
-                            },
-                            modifier = Modifier.testTag("btn_redownload_update")
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Download,
-                                contentDescription = null,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text("Download v1.4.5 APK")
-                        }
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Button(
-                            onClick = onDismiss,
-                            modifier = Modifier.testTag("btn_confirm_update")
-                        ) {
-                            Text("OK")
-                        }
+                    Button(
+                        onClick = onDismiss,
+                        modifier = Modifier.testTag("btn_confirm_update")
+                    ) {
+                        Text("OK")
                     }
                 }
             } else {
