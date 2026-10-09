@@ -132,9 +132,9 @@ async function handleRequest(req, res) {
       versionCode: 12,
       tagName: 'v1.4.7',
       releaseNotes: '🇮🇳 Recommendations: Restored Indian Mutual Funds tab alongside Indian Stocks with dedicated filters and instant search. Fixed in-app APK installer with direct binary download, integrity verification, and clean re-install workflow.',
-      downloadUrl: '/downloads/DailyBrief-latest.apk',
+      downloadUrl: 'https://github.com/kamalbaitha-hub/Daily_Brief/releases/download/v1.4.7/DailyBrief-v1.4.7.apk',
       apkName: 'DailyBrief-v1.4.7.apk',
-      releasePageUrl: 'https://github.com/kamalbaitha-hub/Daily_Brief/releases',
+      releasePageUrl: 'https://github.com/kamalbaitha-hub/Daily_Brief/releases/tag/v1.4.7',
       publishedAt: new Date().toISOString()
     }, null, 2));
     return;

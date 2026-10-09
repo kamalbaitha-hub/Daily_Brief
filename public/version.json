@@ -4,6 +4,6 @@
   "versionCode": 12,
   "tagName": "v1.4.7",
   "releaseNotes": "🇮🇳 Recommendations: Restored Indian Mutual Funds tab alongside Indian Stocks with dedicated category filters and instant search. Fixed in-app APK installer with direct binary download, integrity verification, and clean re-install workflow.",
-  "downloadUrl": "https://ais-pre-zkymhrkneugz34madqd3s3-951298028561.asia-east1.run.app/downloads/DailyBrief-latest.apk",
-  "releasePageUrl": "https://github.com/kamalbaitha-hub/Daily_Brief/releases"
+  "downloadUrl": "https://github.com/kamalbaitha-hub/Daily_Brief/releases/download/v1.4.7/DailyBrief-v1.4.7.apk",
+  "releasePageUrl": "https://github.com/kamalbaitha-hub/Daily_Brief/releases/tag/v1.4.7"
 }
