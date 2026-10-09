@@ -44,7 +44,7 @@ object PublicationCornerData {
             publisher = "Bennett, Coleman & Co. Ltd.",
             category = "National & Metro",
             description = "India's highest circulating English daily with comprehensive city bureaus, international wire coverage, sports, and lifestyle supplements.",
-            eEditionUrl = "https://epaper.timesgroup.com",
+            eEditionUrl = "https://epaper.timesofindia.com",
             badgeLabel = "DAILY E-PAPER",
             accentColorHex = 0xFFC2410C, // Rust Orange
             iconType = "newspaper"

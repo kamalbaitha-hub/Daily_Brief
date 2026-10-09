@@ -528,7 +528,7 @@ const NEWSPAPERS = [
     publisher: "Bennett, Coleman & Co. Ltd.",
     category: "National & Metro",
     description: "India's highest circulating English daily with comprehensive city bureaus, international wire coverage, sports, and lifestyle supplements.",
-    eEditionUrl: "https://epaper.timesgroup.com",
+    eEditionUrl: "https://epaper.timesofindia.com",
     badgeLabel: "DAILY E-PAPER",
     accentColor: "#c2410c",
     icon: "newspaper"
@@ -550,7 +550,7 @@ const NEWSPAPERS = [
     publisher: "Bennett, Coleman & Co. Ltd.",
     category: "Business & Financial",
     description: "India's premier financial daily tracking corporate balance sheets, policy reforms, stock markets, and startup venture investments.",
-    eEditionUrl: "https://epaper.indiatimes.com/the-economic-times",
+    eEditionUrl: "https://economictimes.indiatimes.com",
     badgeLabel: "BUSINESS E-PAPER",
     accentColor: "#047857",
     icon: "business"
@@ -633,7 +633,7 @@ const MAGAZINES = [
     category: "Bollywood & Glamour",
     region: "hindi",
     description: "The gold standard of Indian cinema journalism in Hindi. Exclusive red-carpet photo shoots, Filmfare Awards insider access, fashion trends, and candid star dialogues.",
-    eEditionUrl: "https://www.filmfare.com/hindi",
+    eEditionUrl: "https://www.filmfare.com",
     badgeLabel: "HINDI ENTERTAINMENT",
     accentColor: "#be185d",
     icon: "entertainment"
