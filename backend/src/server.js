@@ -51,7 +51,7 @@ function setStandardHeaders(res) {
 // Static file server helper for PWA
 function serveStaticFile(reqPath, res) {
   let relativePath = reqPath === '/' ? '/index.html' : reqPath;
-  const filePath = path.join(PUBLIC_DIR, relativePath);
+  let filePath = path.join(PUBLIC_DIR, relativePath);
 
   // Security check to prevent directory traversal
   if (!filePath.startsWith(PUBLIC_DIR)) {
@@ -60,13 +60,27 @@ function serveStaticFile(reqPath, res) {
     return true;
   }
 
+  // Fallback for APK downloads to check build outputs if not in public/downloads
+  if (relativePath.endsWith('.apk') && !fs.existsSync(filePath)) {
+    const buildApk = path.resolve(__dirname, '../../app/build/outputs/apk/debug/app-debug.apk');
+    const rootApk = path.resolve(__dirname, '../../.build-outputs/app-debug.apk');
+    if (fs.existsSync(buildApk)) {
+      filePath = buildApk;
+    } else if (fs.existsSync(rootApk)) {
+      filePath = rootApk;
+    }
+  }
+
   if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
     const ext = path.extname(filePath).toLowerCase();
     const contentType = MIME_TYPES[ext] || 'application/octet-stream';
+    const stat = fs.statSync(filePath);
     res.setHeader('Content-Type', contentType);
     if (ext === '.apk') {
       res.setHeader('Content-Disposition', 'attachment; filename="' + path.basename(filePath) + '"');
+      res.setHeader('Content-Length', stat.size);
       res.setHeader('Cache-Control', 'no-cache');
+      res.setHeader('Accept-Ranges', 'bytes');
     } else if (ext === '.html' || ext === '.json' || ext === '.js') {
       res.setHeader('Cache-Control', 'no-cache');
     } else {
@@ -114,13 +128,13 @@ async function handleRequest(req, res) {
     res.statusCode = 200;
     res.end(JSON.stringify({
       hasUpdate: true,
-      latestVersion: '1.4.5',
-      versionCode: 10,
-      tagName: 'v1.4.5',
-      releaseNotes: 'Fresh Market Recommendations update: Added 38 high-conviction national & international stock and mutual fund research calls from Goldman Sachs, Morgan Stanley, Motilal Oswal, Vanguard, BlackRock, and PPFAS with quick region filter tabs and search.',
-      downloadUrl: '/downloads/DailyBrief-v1.4.5.apk',
-      apkName: 'DailyBrief-v1.4.5.apk',
-      releasePageUrl: 'https://github.com/kamalbaitha-hub/Daily_Brief',
+      latestVersion: '1.4.7',
+      versionCode: 12,
+      tagName: 'v1.4.7',
+      releaseNotes: '🇮🇳 Recommendations: Restored Indian Mutual Funds tab alongside Indian Stocks with dedicated filters and instant search. Fixed in-app APK installer with direct binary download, integrity verification, and clean re-install workflow.',
+      downloadUrl: '/downloads/DailyBrief-latest.apk',
+      apkName: 'DailyBrief-v1.4.7.apk',
+      releasePageUrl: 'https://github.com/kamalbaitha-hub/Daily_Brief/releases',
       publishedAt: new Date().toISOString()
     }, null, 2));
     return;
@@ -205,9 +219,15 @@ async function handleRequest(req, res) {
     const served = serveStaticFile(pathname, res);
     if (served) return;
 
-    // Fallback to /index.html for client-side routing
-    const fallbackServed = serveStaticFile('/index.html', res);
-    if (fallbackServed) return;
+    // Do NOT fall back to index.html for APK downloads or data files
+    const isAssetOrData = pathname.endsWith('.apk') || pathname.endsWith('.json') ||
+      pathname.endsWith('.js') || pathname.endsWith('.css') || pathname.endsWith('.ico') ||
+      pathname.endsWith('.png') || pathname.endsWith('.jpg') || pathname.startsWith('/downloads/');
+    if (!isAssetOrData) {
+      // Fallback to /index.html for client-side routing
+      const fallbackServed = serveStaticFile('/index.html', res);
+      if (fallbackServed) return;
+    }
   }
 
   // 404 Not Found

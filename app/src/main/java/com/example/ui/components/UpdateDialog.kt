@@ -2,6 +2,7 @@ package com.example.ui.components
 
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -17,6 +18,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.OpenInBrowser
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -45,6 +47,7 @@ fun UpdateDialog(
     isDownloading: Boolean,
     downloadProgress: Int,
     onConfirmUpdate: () -> Unit,
+    onCleanReinstall: () -> Unit = {},
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -160,16 +163,24 @@ fun UpdateDialog(
                         color = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f),
                         modifier = Modifier.fillMaxWidth().padding(top = 10.dp)
                     ) {
-                        Row(modifier = Modifier.padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = Icons.Default.CheckCircle,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.tertiary,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
+                        Column(modifier = Modifier.padding(10.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Default.CheckCircle,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.tertiary,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "Installation Options:",
+                                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                                    color = MaterialTheme.colorScheme.onTertiaryContainer
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = "Tip: If Android shows 'App not installed', please uninstall the old Daily Brief app first to clear conflicting signatures.",
+                                text = "• 1-Tap Upgrade: Installs new version directly over old app.\n• Clean Re-install: Saves APK in Downloads, uninstalls old app to prevent signature conflicts, and prompts 1-tap re-install.",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onTertiaryContainer
                             )
@@ -197,7 +208,7 @@ fun UpdateDialog(
                             )
                             Spacer(modifier = Modifier.height(6.dp))
                             Text(
-                                text = "• 38 National & Global Stock & Mutual Fund recommendations (Goldman Sachs, Morgan Stanley, Motilal Oswal, Vanguard, BlackRock, PPFAS)\n• Instant search bar & region filters (Indian vs Global)\n• Restructured News Briefs: Heading -> Key Points -> Background -> Read original publication\n• Newspaper & Magazine digital kiosks (22+ publications)",
+                                text = "• High-Conviction Indian Stock & Mutual Fund recommendations\n• Instant search bar & sector filters\n• Restructured News Briefs: Heading -> Key Points -> Background -> Read original publication\n• Newspaper & Magazine digital kiosks (22+ publications)",
                                 style = MaterialTheme.typography.bodySmall.copy(lineHeight = 18.sp),
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -209,17 +220,34 @@ fun UpdateDialog(
         confirmButton = {
             if (!isDownloading) {
                 if (updateInfo.hasUpdate) {
-                    Button(
-                        onClick = onConfirmUpdate,
-                        modifier = Modifier.testTag("btn_confirm_update")
+                    Column(
+                        horizontalAlignment = Alignment.End,
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Download,
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text("Download & Install")
+                        Button(
+                            onClick = onConfirmUpdate,
+                            modifier = Modifier.testTag("btn_confirm_update")
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Download,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("1-Tap Upgrade")
+                        }
+                        OutlinedButton(
+                            onClick = onCleanReinstall,
+                            modifier = Modifier.testTag("btn_clean_reinstall")
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Refresh,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Clean Re-install")
+                        }
                     }
                 } else {
                     Row(verticalAlignment = Alignment.CenterVertically) {

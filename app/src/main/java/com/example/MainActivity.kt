@@ -111,6 +111,9 @@ fun DailyBriefApp(
                     onConfirmUpdate = {
                         viewModel.downloadAndInstallUpdate()
                     },
+                    onCleanReinstall = {
+                        viewModel.cleanReinstallUpdate()
+                    },
                     onDismiss = {
                         viewModel.dismissUpdateDialog()
                     }

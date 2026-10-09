@@ -35,6 +35,7 @@ data class DailyBriefUiState(
     val isDownloadingUpdate: Boolean = false,
     val downloadProgress: Int = 0,
     val updateInfo: com.example.update.UpdateInfo? = null,
+    val downloadedApkFile: java.io.File? = null,
     val showUpdateDialog: Boolean = false
 )
 
@@ -256,18 +257,20 @@ class DailyBriefViewModel(application: Application) : AndroidViewModel(applicati
                 context = getApplication(),
                 apkUrl = info.downloadUrl,
                 versionTag = info.latestVersion,
+                autoLaunchInstaller = true,
                 onProgress = { pct ->
                     _uiState.update { it.copy(downloadProgress = pct) }
                 }
             )
 
             result.fold(
-                onSuccess = {
+                onSuccess = { file ->
                     _uiState.update {
                         it.copy(
                             isDownloadingUpdate = false,
+                            downloadedApkFile = file,
                             showUpdateDialog = false,
-                            statusMessage = "APK downloaded! Launching installer..."
+                            statusMessage = "APK verified & saved to Downloads! Launching installer..."
                         )
                     }
                 },
@@ -275,11 +278,68 @@ class DailyBriefViewModel(application: Application) : AndroidViewModel(applicati
                     _uiState.update {
                         it.copy(
                             isDownloadingUpdate = false,
-                            statusMessage = "Download failed: ${error.message}"
+                            statusMessage = "Update error: ${error.message}"
                         )
                     }
                 }
             )
+        }
+    }
+
+    fun cleanReinstallUpdate() {
+        val info = _uiState.value.updateInfo ?: return
+        val currentApk = _uiState.value.downloadedApkFile
+        if (currentApk != null && currentApk.exists()) {
+            _uiState.update {
+                it.copy(
+                    showUpdateDialog = false,
+                    statusMessage = "APK saved in Downloads! Please confirm uninstallation when prompted."
+                )
+            }
+            com.example.update.GitHubUpdateManager.cleanReinstallApk(
+                context = getApplication(),
+                apkFile = currentApk,
+                versionTag = info.latestVersion
+            )
+        } else {
+            viewModelScope.launch {
+                _uiState.update { it.copy(isDownloadingUpdate = true, downloadProgress = 0) }
+                val result = com.example.update.GitHubUpdateManager.downloadAndInstallApk(
+                    context = getApplication(),
+                    apkUrl = info.downloadUrl,
+                    versionTag = info.latestVersion,
+                    autoLaunchInstaller = false,
+                    onProgress = { pct ->
+                        _uiState.update { it.copy(downloadProgress = pct) }
+                    }
+                )
+
+                result.fold(
+                    onSuccess = { file ->
+                        _uiState.update {
+                            it.copy(
+                                isDownloadingUpdate = false,
+                                downloadedApkFile = file,
+                                showUpdateDialog = false,
+                                statusMessage = "APK saved to Downloads! Prompting to uninstall old app..."
+                            )
+                        }
+                        com.example.update.GitHubUpdateManager.cleanReinstallApk(
+                            context = getApplication(),
+                            apkFile = file,
+                            versionTag = info.latestVersion
+                        )
+                    },
+                    onFailure = { error ->
+                        _uiState.update {
+                            it.copy(
+                                isDownloadingUpdate = false,
+                                statusMessage = "Download error: ${error.message}"
+                            )
+                        }
+                    }
+                )
+            }
         }
     }
 

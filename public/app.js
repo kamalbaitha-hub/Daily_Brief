@@ -283,39 +283,68 @@ function renderMagazineCorner(container) {
   `;
 }
 
-// 3. Recommendations Section (Indian Stocks Only)
+// 3. Recommendations Section (Indian Stocks & Mutual Funds)
 let recSectorFilter = 'all';
+let recFundCategory = 'all';
 
 function renderRecommendationsSection(container) {
   container.innerHTML = `
     <div class="section-banner" style="border-color: rgba(16, 185, 129, 0.4); background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(5, 150, 105, 0.1));">
       <div class="section-banner-text">
-        <span style="font-size: 0.75rem; font-weight: 800; color: #34d399; letter-spacing: 0.05em; display: block; margin-bottom: 4px;">📈 INDIAN EQUITIES • RESEARCH BY MOTILAL OSWAL, GOLDMAN SACHS & MORGAN STANLEY</span>
-        <h2>High-Conviction Indian Stock Recommendations (${STOCK_PICKS.length} Equities)</h2>
-        <p>Curated equity research calls from premier national & global brokerages: Motilal Oswal, Goldman Sachs, Morgan Stanley, Nomura, Jefferies, and ICICI Direct.</p>
+        <span style="font-size: 0.75rem; font-weight: 800; color: #34d399; letter-spacing: 0.05em; display: block; margin-bottom: 4px;">📈 INDIAN MARKETS • EQUITIES & MUTUAL FUNDS • SEP 2026</span>
+        <h2>Executive Recommendations (${STOCK_PICKS.length + MUTUAL_FUNDS.length} High-Conviction Picks)</h2>
+        <p>Curated research calls: Indian Equities (Motilal Oswal, Goldman Sachs, Morgan Stanley) & Top Domestic AMCs (PPFAS, Mirae Asset, SBI, HDFC, Quant).</p>
       </div>
     </div>
 
-    <!-- Sector Filter Pills -->
+    <!-- Main Sub-tabs: Stocks vs Mutual Funds -->
+    <div class="sub-tabs-row" style="margin-bottom: 12px;">
+      <button class="sub-tab-btn ${recSubTab === 'stocks' ? 'active' : ''}" onclick="switchRecTab('stocks')">
+        📊 Indian Stocks (${STOCK_PICKS.length})
+      </button>
+      <button class="sub-tab-btn ${recSubTab === 'funds' ? 'active' : ''}" onclick="switchRecTab('funds')">
+        🏛️ Indian Mutual Funds (${MUTUAL_FUNDS.length})
+      </button>
+    </div>
+
+    <!-- Filter Pills depending on active tab -->
     <div class="sub-tabs-row" style="margin-bottom: 14px; gap: 8px; flex-wrap: wrap;">
-      <button class="sub-tab-btn ${recSectorFilter === 'all' ? 'active' : ''}" onclick="switchRecSector('all')">
-        All Stocks (${STOCK_PICKS.length})
-      </button>
-      <button class="sub-tab-btn ${recSectorFilter === 'defence' ? 'active' : ''}" onclick="switchRecSector('defence')">
-        Defence & Infra
-      </button>
-      <button class="sub-tab-btn ${recSectorFilter === 'banking' ? 'active' : ''}" onclick="switchRecSector('banking')">
-        Banking & Finance
-      </button>
-      <button class="sub-tab-btn ${recSectorFilter === 'it' ? 'active' : ''}" onclick="switchRecSector('it')">
-        IT & Telecom
-      </button>
-      <button class="sub-tab-btn ${recSectorFilter === 'auto' ? 'active' : ''}" onclick="switchRecSector('auto')">
-        Auto & Energy
-      </button>
-      <button class="sub-tab-btn ${recSectorFilter === 'pharma' ? 'active' : ''}" onclick="switchRecSector('pharma')">
-        Pharma & FMCG
-      </button>
+      ${recSubTab === 'stocks' ? `
+        <button class="sub-tab-btn ${recSectorFilter === 'all' ? 'active' : ''}" onclick="switchRecSector('all')">
+          All Stocks (${STOCK_PICKS.length})
+        </button>
+        <button class="sub-tab-btn ${recSectorFilter === 'defence' ? 'active' : ''}" onclick="switchRecSector('defence')">
+          Defence & Infra
+        </button>
+        <button class="sub-tab-btn ${recSectorFilter === 'banking' ? 'active' : ''}" onclick="switchRecSector('banking')">
+          Banking & Finance
+        </button>
+        <button class="sub-tab-btn ${recSectorFilter === 'it' ? 'active' : ''}" onclick="switchRecSector('it')">
+          IT & Telecom
+        </button>
+        <button class="sub-tab-btn ${recSectorFilter === 'auto' ? 'active' : ''}" onclick="switchRecSector('auto')">
+          Auto & Energy
+        </button>
+        <button class="sub-tab-btn ${recSectorFilter === 'pharma' ? 'active' : ''}" onclick="switchRecSector('pharma')">
+          Pharma & FMCG
+        </button>
+      ` : `
+        <button class="sub-tab-btn ${recFundCategory === 'all' ? 'active' : ''}" onclick="switchRecFundCategory('all')">
+          All Funds (${MUTUAL_FUNDS.length})
+        </button>
+        <button class="sub-tab-btn ${recFundCategory === 'flexi' ? 'active' : ''}" onclick="switchRecFundCategory('flexi')">
+          Flexi Cap
+        </button>
+        <button class="sub-tab-btn ${recFundCategory === 'large_mid' ? 'active' : ''}" onclick="switchRecFundCategory('large_mid')">
+          Large & Mid Cap
+        </button>
+        <button class="sub-tab-btn ${recFundCategory === 'small_mid' ? 'active' : ''}" onclick="switchRecFundCategory('small_mid')">
+          Small & Mid Cap
+        </button>
+        <button class="sub-tab-btn ${recFundCategory === 'contra' ? 'active' : ''}" onclick="switchRecFundCategory('contra')">
+          Contra & Thematic
+        </button>
+      `}
     </div>
 
     <!-- Search Input -->
@@ -323,15 +352,21 @@ function renderRecommendationsSection(container) {
       <input
         type="text"
         id="rec-search-input"
-        placeholder="Search stock ticker, name, or broker (e.g. BEL, Motilal, TCS, Reliance)..."
+        placeholder="${recSubTab === 'stocks' ? 'Search stock ticker, name, or broker (e.g. BEL, Motilal, TCS, Reliance)...' : 'Search mutual fund, AMC (e.g. PPFAS, Motilal Oswal, SBI, HDFC, Quant)...'}"
         value="${recSearchQuery}"
         oninput="handleRecSearch(this.value)"
         style="width: 100%; padding: 10px 14px; border-radius: 10px; background: var(--bg-surface); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.9rem;"
       />
     </div>
 
-    ${renderStocksList()}
+    ${recSubTab === 'stocks' ? renderStocksList() : renderFundsList()}
   `;
+}
+
+function switchRecTab(tab) {
+  recSubTab = tab;
+  recSearchQuery = '';
+  renderApp();
 }
 
 function switchRecSector(sector) {
@@ -339,11 +374,16 @@ function switchRecSector(sector) {
   renderApp();
 }
 
+function switchRecFundCategory(cat) {
+  recFundCategory = cat;
+  renderApp();
+}
+
 function handleRecSearch(query) {
   recSearchQuery = query;
   const listContainer = document.getElementById('rec-list-container');
   if (listContainer) {
-    listContainer.outerHTML = renderStocksList();
+    listContainer.outerHTML = recSubTab === 'stocks' ? renderStocksList() : renderFundsList();
   } else {
     renderApp();
   }
@@ -428,6 +468,92 @@ function renderStocksList() {
                 <strong>${m.label}:</strong> ${m.value}
               </span>
             `).join('')}
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function renderFundsList() {
+  const filtered = MUTUAL_FUNDS.filter(fund => {
+    let matchesCat = true;
+    const c = (fund.category || '').toLowerCase();
+    if (recFundCategory === 'flexi') {
+      matchesCat = c.includes('flexi');
+    } else if (recFundCategory === 'large_mid') {
+      matchesCat = c.includes('large');
+    } else if (recFundCategory === 'small_mid') {
+      matchesCat = c.includes('small') || c.includes('mid');
+    } else if (recFundCategory === 'contra') {
+      matchesCat = c.includes('contra') || c.includes('digital') || c.includes('balanced');
+    }
+
+    const q = recSearchQuery.toLowerCase().trim();
+    const matchesQuery = !q ? true : (
+      fund.fundName.toLowerCase().includes(q) ||
+      fund.fundHouse.toLowerCase().includes(q) ||
+      fund.category.toLowerCase().includes(q) ||
+      (fund.researchSource && fund.researchSource.toLowerCase().includes(q))
+    );
+    return matchesCat && matchesQuery;
+  });
+
+  if (filtered.length === 0) {
+    return `<div id="rec-list-container" style="text-align: center; padding: 40px; color: #94a3b8;">No Indian mutual fund recommendations match your criteria.</div>`;
+  }
+
+  return `
+    <div id="rec-list-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px;">
+      ${filtered.map((fund) => `
+        <div class="article-card">
+          <!-- Institutional Source Tag -->
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <span style="background: rgba(168, 85, 247, 0.15); color: #c084fc; font-size: 0.72rem; font-weight: 700; padding: 3px 8px; border-radius: 6px;">
+              🏛️ ${fund.fundHouse}
+            </span>
+            <span style="font-size: 0.7rem; color: #10b981; font-weight: 600;">
+              🇮🇳 Domestic AMC • Sep 2026
+            </span>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+            <div>
+              <div style="font-size: 1.15rem; font-weight: 800;">${fund.fundName}</div>
+              <div style="font-size: 0.8rem; color: #94a3b8; font-weight: 600;">${fund.category} • Risk: ${fund.riskLevel}</div>
+            </div>
+            <span style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; font-size: 0.75rem; font-weight: 800; padding: 4px 8px; border-radius: 6px;">
+              ${'★'.repeat(fund.rating)} Rating
+            </span>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); background: var(--bg-surface); padding: 12px; border-radius: 10px; margin: 12px 0; text-align: center; border: 1px solid var(--border-color);">
+            <div>
+              <div style="font-size: 0.7rem; color: #94a3b8;">1Y Return</div>
+              <div style="font-weight: 700; font-size: 0.95rem; color: #10b981;">${fund.return1Yr}</div>
+            </div>
+            <div>
+              <div style="font-size: 0.7rem; color: #94a3b8;">3Y CAGR</div>
+              <div style="font-weight: 700; font-size: 0.95rem; color: #10b981;">${fund.return3Yr}</div>
+            </div>
+            <div>
+              <div style="font-size: 0.7rem; color: #94a3b8;">5Y CAGR</div>
+              <div style="font-weight: 800; font-size: 0.95rem; color: #10b981;">${fund.return5Yr}</div>
+            </div>
+          </div>
+
+          <p style="font-size: 0.85rem; color: var(--text-sub); line-height: 1.45; margin-bottom: 12px;">
+            ${fund.verdictAndAnalysis}
+          </p>
+
+          <div style="display: flex; justify-content: space-between; font-size: 0.72rem; color: #94a3b8; margin-bottom: 8px;">
+            <span>NAV: ${fund.nav}</span>
+            <span>Exp: ${fund.expenseRatio}</span>
+            <span>AUM: ${fund.aum}</span>
+          </div>
+
+          <div style="font-size: 0.75rem; color: #cbd5e1; border-top: 1px solid var(--border-color); padding-top: 10px;">
+            <strong>Top Holdings:</strong> ${fund.topHoldings.join(', ')}
           </div>
         </div>
       `).join('')}

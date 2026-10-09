@@ -5,8 +5,10 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
+import android.os.Environment
 import android.provider.Settings
 import android.util.Log
 import androidx.core.app.NotificationCompat
@@ -29,6 +31,7 @@ import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.Path
 import java.io.File
+import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.util.concurrent.TimeUnit
 
@@ -156,10 +159,10 @@ object GitHubUpdateManager {
                         if (serverUpdate != null) {
                             val sVer = (serverUpdate.latestVersion ?: serverUpdate.tagName ?: "").removePrefix("v").trim()
                             if (compareVersions(sVer, currentVersion) > 0) {
-                                val fullDownload = if (serverUpdate.downloadUrl?.startsWith("http") == true) {
-                                    serverUpdate.downloadUrl
+                                val fullDownload = if (serverUpdate.downloadUrl?.endsWith(".apk", ignoreCase = true) == true) {
+                                    if (serverUpdate.downloadUrl.startsWith("http")) serverUpdate.downloadUrl else "$cleanBase${serverUpdate.downloadUrl}"
                                 } else {
-                                    "$cleanBase${serverUpdate.downloadUrl ?: "/downloads/DailyBrief-v1.4.5.apk"}"
+                                    "https://ais-pre-zkymhrkneugz34madqd3s3-951298028561.asia-east1.run.app/downloads/DailyBrief-latest.apk"
                                 }
                                 val info = UpdateInfo(
                                     hasUpdate = true,
@@ -204,7 +207,8 @@ object GitHubUpdateManager {
                 it.name?.endsWith(".apk", ignoreCase = true) == true
             }
 
-            val downloadUrl = apkAsset?.browserDownloadUrl ?: release.htmlUrl ?: ""
+            val downloadUrl = apkAsset?.browserDownloadUrl
+                ?: "https://ais-pre-zkymhrkneugz34madqd3s3-951298028561.asia-east1.run.app/downloads/DailyBrief-latest.apk"
 
             val info = UpdateInfo(
                 hasUpdate = isNewer,
@@ -315,49 +319,179 @@ object GitHubUpdateManager {
         context: Context,
         apkUrl: String,
         versionTag: String,
+        autoLaunchInstaller: Boolean = true,
         onProgress: (Int) -> Unit
     ): Result<File> = withContext(Dispatchers.IO) {
-        try {
-            val request = Request.Builder().url(apkUrl).build()
-            val response = okHttpClient.newCall(request).execute()
+        val cleanTag = versionTag.removePrefix("v").trim()
+        val candidateUrls = listOfNotNull(
+            apkUrl.takeIf { it.endsWith(".apk", ignoreCase = true) },
+            "https://ais-pre-zkymhrkneugz34madqd3s3-951298028561.asia-east1.run.app/downloads/DailyBrief-latest.apk",
+            "https://ais-pre-zkymhrkneugz34madqd3s3-951298028561.asia-east1.run.app/downloads/DailyBrief-v${cleanTag}.apk",
+            "https://github.com/kamalbaitha-hub/Daily_Brief/releases/download/v${cleanTag}/DailyBrief-v${cleanTag}.apk",
+            apkUrl.takeIf { !it.contains("/releases", ignoreCase = true) }
+        ).distinct()
 
-            if (!response.isSuccessful) {
-                return@withContext Result.failure(Exception("HTTP ${response.code}: Failed to download APK"))
-            }
+        var lastError: Exception? = null
 
-            val body = response.body ?: return@withContext Result.failure(Exception("Empty download body"))
-            val contentLength = body.contentLength()
+        for (targetUrl in candidateUrls) {
+            try {
+                Log.d(TAG, "Attempting APK download from: $targetUrl")
+                val request = Request.Builder().url(targetUrl).build()
+                val response = okHttpClient.newCall(request).execute()
 
-            val updateDir = File(context.cacheDir, "updates").apply { mkdirs() }
-            val apkFile = File(updateDir, "daily_brief_update_${versionTag}.apk")
-
-            body.byteStream().use { input ->
-                FileOutputStream(apkFile).use { output ->
-                    val buffer = ByteArray(8 * 1024)
-                    var bytesRead: Int
-                    var totalRead: Long = 0
-
-                    while (input.read(buffer).also { bytesRead = it } != -1) {
-                        output.write(buffer, 0, bytesRead)
-                        totalRead += bytesRead
-                        if (contentLength > 0) {
-                            val progress = ((totalRead * 100) / contentLength).toInt()
-                            onProgress(progress)
-                        }
-                    }
-                    output.flush()
+                if (!response.isSuccessful) {
+                    lastError = Exception("HTTP ${response.code} downloading from $targetUrl")
+                    continue
                 }
-            }
 
-            // Launch package installer on Main thread
-            withContext(Dispatchers.Main) {
-                installApk(context, apkFile)
-            }
+                val contentType = response.header("Content-Type", "") ?: ""
+                if (contentType.contains("text/html", ignoreCase = true)) {
+                    Log.w(TAG, "Skipping $targetUrl because server returned HTML instead of an APK ($contentType)")
+                    lastError = Exception("Server returned a webpage instead of an APK binary")
+                    continue
+                }
 
-            Result.success(apkFile)
+                val body = response.body ?: continue
+                val contentLength = body.contentLength()
+
+                // Save into external files directory or cacheDir
+                val updateDir = File(context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) ?: context.cacheDir, "updates").apply { mkdirs() }
+                val apkFile = File(updateDir, "DailyBrief-v${cleanTag}.apk")
+
+                body.byteStream().use { input ->
+                    FileOutputStream(apkFile).use { output ->
+                        val buffer = ByteArray(16 * 1024)
+                        var bytesRead: Int
+                        var totalRead: Long = 0
+
+                        while (input.read(buffer).also { bytesRead = it } != -1) {
+                            output.write(buffer, 0, bytesRead)
+                            totalRead += bytesRead
+                            if (contentLength > 0) {
+                                val progress = ((totalRead * 100) / contentLength).toInt().coerceIn(0, 100)
+                                onProgress(progress)
+                            }
+                        }
+                        output.flush()
+                    }
+                }
+
+                // Verify file size
+                if (apkFile.length() < 500_000) {
+                    Log.w(TAG, "File too small (${apkFile.length()} bytes) to be valid APK")
+                    apkFile.delete()
+                    lastError = Exception("Downloaded file is too small to be a valid APK (${apkFile.length()} bytes)")
+                    continue
+                }
+
+                // Verify ZIP magic header (0x50, 0x4B, 0x03, 0x04)
+                val isZip = FileInputStream(apkFile).use { fis ->
+                    val header = ByteArray(4)
+                    val read = fis.read(header)
+                    read == 4 && header[0] == 0x50.toByte() && header[1] == 0x4B.toByte() && header[2] == 0x03.toByte() && header[3] == 0x04.toByte()
+                }
+
+                if (!isZip) {
+                    Log.w(TAG, "Downloaded file does not have valid APK/ZIP magic bytes")
+                    apkFile.delete()
+                    lastError = Exception("Downloaded file is not a valid APK package (not a ZIP archive)")
+                    continue
+                }
+
+                // Verify package with PackageManager
+                val archiveInfo = context.packageManager.getPackageArchiveInfo(apkFile.absolutePath, 0)
+                if (archiveInfo == null) {
+                    Log.w(TAG, "PackageManager failed to parse downloaded APK file")
+                    apkFile.delete()
+                    lastError = Exception("Android system could not parse the downloaded APK file. File may be corrupted.")
+                    continue
+                }
+
+                Log.i(TAG, "Valid APK verified! Package: ${archiveInfo.packageName}, Version: ${archiveInfo.versionName}")
+
+                // Backup to public Downloads folder so it persists even if old app is uninstalled
+                copyToPublicDownloads(apkFile, "DailyBrief-v${cleanTag}.apk")
+
+                onProgress(100)
+
+                if (autoLaunchInstaller) {
+                    withContext(Dispatchers.Main) {
+                        installApk(context, apkFile)
+                    }
+                }
+
+                return@withContext Result.success(apkFile)
+            } catch (e: Exception) {
+                Log.e(TAG, "Error trying $targetUrl: ${e.message}")
+                lastError = e
+            }
+        }
+
+        Result.failure(lastError ?: Exception("Failed to download a valid APK file"))
+    }
+
+    fun copyToPublicDownloads(sourceFile: File, destinationFileName: String): File? {
+        return try {
+            val publicDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+            if (publicDir.exists() || publicDir.mkdirs()) {
+                val destFile = File(publicDir, destinationFileName)
+                sourceFile.copyTo(destFile, overwrite = true)
+                Log.d(TAG, "Successfully copied APK to public Downloads: ${destFile.absolutePath}")
+                destFile
+            } else null
         } catch (e: Exception) {
-            Log.e(TAG, "Error downloading APK: ${e.message}", e)
-            Result.failure(e)
+            Log.w(TAG, "Failed to copy APK to public Downloads: ${e.message}")
+            null
+        }
+    }
+
+    fun cleanReinstallApk(context: Context, apkFile: File, versionTag: String) {
+        try {
+            // 1. Ensure file is also in public Downloads folder so it stays after uninstall
+            val publicApk = copyToPublicDownloads(apkFile, "DailyBrief-v${versionTag}.apk") ?: apkFile
+
+            // 2. Post a persistent Notification so user can tap it right after uninstalling
+            val installUri = FileProvider.getUriForFile(
+                context,
+                "${context.packageName}.fileprovider",
+                publicApk
+            )
+
+            val installIntent = Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(installUri, "application/vnd.android.package-archive")
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION
+            }
+
+            val pendingIntent = PendingIntent.getActivity(
+                context,
+                9002,
+                installIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+
+            val notification = NotificationCompat.Builder(context, UPDATE_CHANNEL_ID)
+                .setSmallIcon(android.R.drawable.stat_sys_download_done)
+                .setContentTitle("Daily Brief $versionTag Ready to Install")
+                .setContentText("Tap here to complete installation of Daily Brief.")
+                .setStyle(
+                    NotificationCompat.BigTextStyle()
+                        .bigText("The fresh Daily Brief v$versionTag APK is saved in your Downloads. Tap this notification to complete installation after the old app is uninstalled.")
+                )
+                .setPriority(NotificationCompat.PRIORITY_MAX)
+                .setContentIntent(pendingIntent)
+                .setAutoCancel(true)
+                .build()
+
+            NotificationManagerCompat.from(context).notify(9002, notification)
+
+            // 3. Launch Android system uninstaller to remove old app and clear signature conflicts
+            val uninstallIntent = Intent(Intent.ACTION_DELETE).apply {
+                data = Uri.parse("package:${context.packageName}")
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            }
+            context.startActivity(uninstallIntent)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error initiating clean re-install: ${e.message}", e)
         }
     }
 
