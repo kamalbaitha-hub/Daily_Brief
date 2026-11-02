@@ -146,7 +146,7 @@ fun RecommendationsSection(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "🇮🇳 INDIAN MARKETS • EQUITIES & MUTUAL FUNDS RESEARCH • SEP 2026",
+                        text = "🇮🇳 INDIAN MARKETS • LIVE EQUITIES & MUTUAL FUNDS RESEARCH • NOV 2026",
                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                         color = Color(0xFF059669),
                         fontSize = 10.5.sp
@@ -516,13 +516,29 @@ fun StockPickCard(
                         )
                     }
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = stock.recommendationDate,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = Color(0xFF059669),
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Medium
-                    )
+                    Surface(
+                        shape = RoundedCornerShape(6.dp),
+                        color = Color(0xFF059669).copy(alpha = 0.14f)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(6.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(0xFF059669))
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "📅 ${stock.recommendationDate}",
+                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                color = Color(0xFF059669),
+                                fontSize = 10.5.sp
+                            )
+                        }
+                    }
                 }
             }
 
@@ -787,13 +803,29 @@ fun MutualFundCard(
                         )
                     }
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = fund.recommendationDate,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = Color(0xFF059669),
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Medium
-                    )
+                    Surface(
+                        shape = RoundedCornerShape(6.dp),
+                        color = Color(0xFF059669).copy(alpha = 0.14f)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(6.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(0xFF059669))
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "📅 ${fund.recommendationDate}",
+                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                color = Color(0xFF059669),
+                                fontSize = 10.5.sp
+                            )
+                        }
+                    }
                 }
             }
 

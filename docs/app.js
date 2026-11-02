@@ -90,6 +90,51 @@ function isArticleWithin24Hours(article) {
   return (now - time) <= TWENTY_FOUR_HOURS_MS;
 }
 
+function formatArticleTime(dateStr) {
+  if (!dateStr) return 'Live • Just now';
+  
+  if (typeof dateStr === 'string' && dateStr.toLowerCase().includes('today')) {
+    return `Live • ${dateStr}`;
+  }
+
+  const dateObj = new Date(dateStr);
+  const timeMs = dateObj.getTime();
+  if (isNaN(timeMs)) {
+    return dateStr;
+  }
+
+  const now = Date.now();
+  const diffMs = now - timeMs;
+
+  if (diffMs >= -60000 && diffMs < 180000) {
+    return 'Just now';
+  }
+
+  const diffMinutes = Math.floor(diffMs / 60000);
+  if (diffMinutes >= 1 && diffMinutes < 60) {
+    return `${diffMinutes}m ago`;
+  }
+
+  const diffHours = Math.floor(diffMinutes / 60);
+  if (diffHours >= 1 && diffHours < 24) {
+    return `${diffHours}h ago`;
+  }
+
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffDays === 1) {
+    return 'Yesterday';
+  }
+
+  const day = String(dateObj.getDate()).padStart(2, '0');
+  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const month = monthNames[dateObj.getMonth()];
+  let hours = dateObj.getHours();
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12 || 12;
+  const minutes = String(dateObj.getMinutes()).padStart(2, '0');
+  return `${day} ${month}, ${hours}:${minutes} ${ampm}`;
+}
+
 // Data fetching from backend if running
 async function loadArticlesFromBackend() {
   try {
@@ -194,9 +239,17 @@ function renderNewspaperCorner(container) {
               <div class="pub-icon-box" style="background: ${item.accentColor}22; color: ${item.accentColor}">
                 📰
               </div>
-              <div class="pub-external-icon">↗</div>
+              <div class="pub-tile-top-side">
+                <span class="pub-date-badge" style="color: #60a5fa; background: rgba(59, 130, 246, 0.12); border-color: rgba(59, 130, 246, 0.25);">
+                  📅 Today's E-Paper
+                </span>
+                <div class="pub-external-icon">↗</div>
+              </div>
             </div>
-            <span class="pub-badge" style="background: ${item.accentColor}22; color: ${item.accentColor}">${item.badgeLabel}</span>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <span class="pub-badge" style="background: ${item.accentColor}22; color: ${item.accentColor}">${item.badgeLabel}</span>
+              <span style="font-size: 0.72rem; color: #94a3b8; font-weight: 600;">⏱️ Daily Edition</span>
+            </div>
             <div class="pub-title">${item.title}</div>
             <div class="pub-category" style="color: ${item.accentColor}">${item.category}</div>
             <div class="pub-desc">${item.description}</div>
@@ -266,9 +319,17 @@ function renderMagazineCorner(container) {
               <div class="pub-icon-box" style="background: ${item.accentColor}22; color: ${item.accentColor}">
                 ${item.icon === 'science' ? '🔬' : item.icon === 'business' ? '💼' : item.icon === 'entertainment' ? '🎬' : item.icon === 'international' ? '🌐' : '📖'}
               </div>
-              <div class="pub-external-icon">↗</div>
+              <div class="pub-tile-top-side">
+                <span class="pub-date-badge">
+                  🗓️ ${item.editionDate || 'Current Issue: Nov 2026'}
+                </span>
+                <div class="pub-external-icon">↗</div>
+              </div>
             </div>
-            <span class="pub-badge" style="background: ${item.accentColor}22; color: ${item.accentColor}">${item.badgeLabel}</span>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <span class="pub-badge" style="background: ${item.accentColor}22; color: ${item.accentColor}">${item.badgeLabel}</span>
+              <span style="font-size: 0.72rem; color: #94a3b8; font-weight: 600;">⏱️ ${item.frequency || 'Monthly Edition'}</span>
+            </div>
             <div class="pub-title">${item.title}</div>
             <div class="pub-category" style="color: ${item.accentColor}">${item.category}</div>
             <div class="pub-desc">${item.description}</div>
@@ -291,9 +352,9 @@ function renderRecommendationsSection(container) {
   container.innerHTML = `
     <div class="section-banner" style="border-color: rgba(16, 185, 129, 0.4); background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(5, 150, 105, 0.1));">
       <div class="section-banner-text">
-        <span style="font-size: 0.75rem; font-weight: 800; color: #34d399; letter-spacing: 0.05em; display: block; margin-bottom: 4px;">📈 INDIAN MARKETS • EQUITIES & MUTUAL FUNDS • SEP 2026</span>
+        <span style="font-size: 0.75rem; font-weight: 800; color: #34d399; letter-spacing: 0.05em; display: block; margin-bottom: 4px;">📈 INDIAN MARKETS • LIVE EQUITIES & MUTUAL FUNDS • NOV 2026</span>
         <h2>Executive Recommendations (${STOCK_PICKS.length + MUTUAL_FUNDS.length} High-Conviction Picks)</h2>
-        <p>Curated research calls: Indian Equities (Motilal Oswal, Goldman Sachs, Morgan Stanley) & Top Domestic AMCs (PPFAS, Mirae Asset, SBI, HDFC, Quant).</p>
+        <p>Curated live research calls: Indian Equities (Motilal Oswal, Goldman Sachs, Morgan Stanley) & Top Domestic AMCs (PPFAS, Mirae Asset, SBI, HDFC, Quant).</p>
       </div>
     </div>
 
@@ -423,13 +484,14 @@ function renderStocksList() {
     <div id="rec-list-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px;">
       ${filtered.map((stock) => `
         <div class="article-card">
-          <!-- Institutional Source Tag -->
+          <!-- Institutional Source Tag & Recommendation Date -->
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
             <span style="background: rgba(59, 130, 246, 0.15); color: #60a5fa; font-size: 0.72rem; font-weight: 700; padding: 3px 8px; border-radius: 6px;">
               🏛️ ${stock.researchSource || 'Institutional Research'}
             </span>
-            <span style="font-size: 0.7rem; color: #10b981; font-weight: 600;">
-              🇮🇳 NSE/BSE • Sep 2026
+            <span class="rec-date-badge">
+              <span class="article-time-dot"></span>
+              📅 ${stock.recommendationDate || '02 Nov 2026 • Live Call'}
             </span>
           </div>
 
@@ -507,13 +569,14 @@ function renderFundsList() {
     <div id="rec-list-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px;">
       ${filtered.map((fund) => `
         <div class="article-card">
-          <!-- Institutional Source Tag -->
+          <!-- Institutional Source Tag & Recommendation Date -->
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
             <span style="background: rgba(168, 85, 247, 0.15); color: #c084fc; font-size: 0.72rem; font-weight: 700; padding: 3px 8px; border-radius: 6px;">
               🏛️ ${fund.fundHouse}
             </span>
-            <span style="font-size: 0.7rem; color: #10b981; font-weight: 600;">
-              🇮🇳 Domestic AMC • Sep 2026
+            <span class="rec-date-badge">
+              <span class="article-time-dot"></span>
+              📅 ${fund.recommendationDate || '02 Nov 2026 • Live Rating'}
             </span>
           </div>
 
@@ -590,8 +653,16 @@ function renderNewsFeed(container) {
         <img class="lead-article-image" src="${lead.image_url || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800'}" alt="${lead.headline}">
         <div class="lead-article-content">
           <div class="article-meta">
-            <span class="article-category-badge">${lead.category}</span>
-            <span>⏱️ ${lead.reading_time || '3 min read'}</span>
+            <div class="article-meta-left">
+              <span class="article-category-badge">${lead.category}</span>
+              <span class="article-time-badge" title="${lead.published_at || ''}">
+                <span class="article-time-dot"></span>
+                ${formatArticleTime(lead.published_at || lead.created_at)}
+              </span>
+            </div>
+            <div class="article-meta-right">
+              <span>⏱️ ${lead.reading_time || '3 min read'}</span>
+            </div>
           </div>
 
           <!-- News Heading -->
@@ -634,8 +705,16 @@ function renderNewsFeed(container) {
             ${concise.map(art => `
               <div class="article-card">
                 <div class="article-meta">
-                  <span class="article-category-badge">${art.category}</span>
-                  <span>⏱️ ${art.reading_time || '2 min read'}</span>
+                  <div class="article-meta-left">
+                    <span class="article-category-badge">${art.category}</span>
+                    <span class="article-time-badge" title="${art.published_at || ''}">
+                      <span class="article-time-dot"></span>
+                      ${formatArticleTime(art.published_at || art.created_at)}
+                    </span>
+                  </div>
+                  <div class="article-meta-right">
+                    <span>⏱️ ${art.reading_time || '2 min read'}</span>
+                  </div>
                 </div>
 
                 <!-- News Heading -->

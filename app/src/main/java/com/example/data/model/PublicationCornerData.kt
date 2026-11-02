@@ -10,7 +10,9 @@ data class PublicationItem(
     val badgeLabel: String = "E-EDITION",
     val accentColorHex: Long = 0xFF0F172A,
     val iconType: String = "newspaper", // "newspaper", "magazine", "business", "science", "health", "entertainment", "international"
-    val region: String = "National" // "National", "International", "Hindi Entertainment"
+    val region: String = "National", // "National", "International", "Hindi Entertainment"
+    val editionDate: String = "Current Issue: Nov 2026",
+    val frequency: String = "Monthly Edition"
 )
 
 object PublicationCornerData {
